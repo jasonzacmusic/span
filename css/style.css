@@ -413,8 +413,8 @@ main { flex: 1; width: min(1500px, 100%); margin: 0 auto; padding: 26px 34px 46p
   font-size: 18px;
   line-height: 1.45;
   color: var(--ink);
-  padding: 14px 0 14px 15px;
-  border-left: 3px solid var(--fam);
+  padding: 14px 0 14px 16px;
+  border-left: 1.5px solid var(--fam);
   margin: 14px 0 0;
 }
 .iv-practice { font-size: 16px; color: var(--ink-2); border-left-color: var(--rule); margin-top: 0; }
@@ -717,8 +717,8 @@ main { flex: 1; width: min(1500px, 100%); margin: 0 auto; padding: 26px 34px 46p
   font-size: 17px;
   font-style: italic;
   color: var(--ink-2);
-  border-left: 3px solid var(--fam);
-  padding-left: 12px;
+  border-left: 1.5px solid var(--fam);
+  padding-left: 13px;
   max-width: 560px;
   text-align: left;
 }
