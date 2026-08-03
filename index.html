@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Span — Master Every Interval | Nathaniel School of Music</title>
+<meta name="description" content="Every musical interval in one view — circle of fifths, keyboard shapes, staff notation, ear training, sight reading and sing-back practice. The interval tricks taught at Nathaniel School of Music, playable.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Span — Master Every Interval">
+<meta property="og:description" content="Twelve distances, one view. Circle of fifths, keyboard shapes, notation, ear · eyes · hands · voice practice — from Nathaniel School of Music.">
+<meta property="og:image" content="assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Span",
+  "applicationCategory": "EducationalApplication",
+  "description": "Interval practice studio: circle of fifths, keyboard shapes, staff notation, ear training, sight reading and sing-back practice for pianists, vocalists and all instrumentalists.",
+  "publisher": { "@type": "Organization", "name": "Nathaniel School of Music" }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="assets/vendor/vexflow.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <img src="assets/nsm-n-white.png" alt="Nathaniel School of Music" class="brand-mark">
+    <div class="brand-words">
+      <span class="brand-name">SPAN</span>
+      <span class="brand-tag">twelve distances · one view</span>
+    </div>
+  </div>
+  <div class="root-pill">root <b id="rootBadge">G</b></div>
+  <nav class="tabs">
+    <button class="tab" data-tab="codex">Codex</button>
+    <button class="tab" data-tab="ear">Ear</button>
+    <button class="tab" data-tab="eyes">Eyes</button>
+    <button class="tab" data-tab="hands">Hands</button>
+    <button class="tab" data-tab="voice">Voice</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ⸻ CODEX — the one view ⸻ -->
+  <section id="view-codex" class="view">
+    <div id="ivRail" class="iv-rail"></div>
+
+    <div class="codex-grid">
+      <div class="panel circle-wrap">
+        <h3>Circle of Fifths</h3>
+        <p class="hint">click any note to set your root · ⟳ fifths · ⟲ fourths · straight across = tritone</p>
+        <div id="circlePanel"></div>
+      </div>
+
+      <div class="panel center-wrap">
+        <span class="plate-label">under the hands</span>
+        <div id="codexPiano" class="piano-wrap"></div>
+        <div class="staff-row">
+          <div class="staff-col">
+            <span class="plate-label">as written</span>
+            <div id="codexStaff" class="staff-box"></div>
+          </div>
+          <div class="staff-controls">
+            <select id="codexStaffMode" class="sel">
+              <option value="melodic" selected>melodic</option>
+              <option value="harmonic">harmonic</option>
+            </select>
+            <select id="codexClef" class="sel">
+              <option value="treble" selected>treble clef</option>
+              <option value="bass">bass clef</option>
+            </select>
+            <label class="sel-label">key <select id="codexKey" class="sel"></select></label>
+            <select id="codexInstr" class="sel"></select>
+          </div>
+        </div>
+      </div>
+
+      <div id="ivCard" class="panel iv-card"></div>
+    </div>
+
+    <div id="labsRow" class="labs-row">
+      <div id="thirdsLab" class="panel lab">
+        <div class="lab-head">
+          <h3>Thirds by Shape</h3>
+          <div class="thirds-toggle">
+            <button data-which="M3" class="active">M3</button>
+            <button data-which="m3">m3</button>
+          </div>
+        </div>
+        <p class="hint">the one thing you mug up — chant them by key-colour</p>
+        <div class="lab-body"></div>
+      </div>
+
+      <div id="tritoneLab" class="panel lab">
+        <div class="lab-head"><h3>Tritone Mirrors</h3></div>
+        <p class="hint">six pairs — the only interval that inverts into itself</p>
+        <div class="lab-body"></div>
+      </div>
+
+      <div class="panel lab">
+        <div class="lab-head"><h3>Scale Gym</h3></div>
+        <p class="hint">internalise seconds by running these from your root</p>
+        <div class="lab-body scale-gym">
+          <button id="wholeToneBtn" class="play-btn wide">▶ Whole-tone scale <span class="dim-text">all major 2nds</span></button>
+          <button id="chromaticBtn" class="play-btn wide">▶ Chromatic scale <span class="dim-text">all minor 2nds</span></button>
+          <p class="gym-note">M2 = root + 2 · m2 = root + 1 — run them up and down until the distances live in your fingers.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⸻ DRILLS ⸻ -->
+  <section id="view-ear" class="view drill"></section>
+  <section id="view-eyes" class="view drill"></section>
+  <section id="view-hands" class="view drill"></section>
+
+  <!-- ⸻ VOICE ⸻ -->
+  <section id="view-voice" class="view drill">
+    <div class="drill-top">
+      <div id="voiceIvs" class="drill-ivs"></div>
+    </div>
+    <div class="drill-stage">
+      <div id="voiceStatus" class="voice-status"></div>
+      <div id="voiceStage" style="display:none">
+        <div id="voicePrompt" class="drill-prompt"></div>
+        <div id="voiceMeter" class="voice-meter">
+          <div class="meter-track">
+            <div class="meter-center"></div>
+            <div id="voiceNeedle" class="meter-needle"></div>
+          </div>
+          <div class="meter-scale"><span>♭ flat</span><span>in tune</span><span>sharp ♯</span></div>
+        </div>
+        <div id="voiceHeard" class="voice-heard">listening…</div>
+        <div id="voiceFeedback" class="drill-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <img src="assets/nsm-logo-white.png" alt="Nathaniel School of Music" class="foot-logo">
+  <div class="foot-words">
+    <span>Built from the interval tricks taught by <b>Jason Zac</b></span>
+    <a href="https://www.nathanielschool.com" rel="noopener">nathanielschool.com</a>
+  </div>
+  <span class="foot-year">© <span id="year"></span> Nathaniel School of Music</span>
+</footer>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
