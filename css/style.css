@@ -25,6 +25,7 @@ html { color-scheme: light; }
 
 body {
   min-height: 100vh;
+  overflow-x: clip;
   display: flex;
   flex-direction: column;
   color: var(--ink);
@@ -150,6 +151,7 @@ main { flex: 1; width: min(1500px, 100%); margin: 0 auto; padding: 26px 34px 46p
 
 .iv-chip {
   --fam: var(--ink);
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -181,6 +183,9 @@ main { flex: 1; width: min(1500px, 100%); margin: 0 auto; padding: 26px 34px 46p
   text-transform: uppercase;
   color: var(--ink-3);
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .iv-chip.active .chip-label { color: var(--ink-2); }
 
@@ -301,7 +306,7 @@ main { flex: 1; width: min(1500px, 100%); margin: 0 auto; padding: 26px 34px 46p
 .staff-row { display: flex; gap: 22px; margin-top: 20px; align-items: flex-start; flex-wrap: wrap; }
 .staff-col { flex: 1; min-width: 250px; }
 .staff-box { width: 100%; }
-.staff-box svg { display: block; margin: 0 auto; overflow: visible; }
+.staff-box svg { display: block; margin: 0 auto; overflow: visible; max-width: 100%; height: auto; }
 .staff-controls { display: flex; flex-direction: column; gap: 7px; min-width: 186px; }
 
 .sel {
@@ -911,14 +916,32 @@ main { flex: 1; width: min(1500px, 100%); margin: 0 auto; padding: 26px 34px 46p
 @media (max-width: 760px) {
   .top { flex-wrap: wrap; gap: 8px; padding: 12px 16px 0; }
   .brand-name { font-size: 27px; }
-  .tabs { margin-left: 0; width: 100%; justify-content: space-between; overflow-x: auto; }
-  .tab { padding: 10px 8px; font-size: 10px; letter-spacing: 0.1em; }
+  .brand-mark { height: 32px; }
+  .root-pill { padding-bottom: 11px; }
+  .tabs {
+    margin-left: 0;
+    width: 100%;
+    max-width: 100%;
+    justify-content: space-between;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { padding: 10px 6px; font-size: 9.5px; letter-spacing: 0.08em; flex: 1 0 auto; }
   main { padding: 18px 16px 32px; }
   .foot { padding: 18px 16px; }
   .codex-grid { grid-template-columns: 1fr; }
   .iv-card { padding-left: 0 !important; }
   .iv-rail { grid-template-columns: repeat(4, 1fr); }
   .iv-chip:nth-child(4n + 1) { border-left: none; }
+  .chip-short { font-size: 19px; }
+  .chip-label { font-size: 7.5px; letter-spacing: 0.06em; }
   .iv-notes { font-size: 30px; }
   .drill-prompt { font-size: 20px; }
+  .drill-top { gap: 12px; }
+  .drill-opts { margin-left: 0; }
+  .plate, .plate-ear { padding: 20px 18px; }
+  .voice-intro { padding: 26px 20px; font-size: 21px; }
+  .staff-controls { min-width: 0; width: 100%; }
+  .labs-row { margin-top: 26px; }
 }
