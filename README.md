@@ -32,10 +32,18 @@ Everything else falls out of those:
   sit four visual labs, all drawn as keyboards rather than lists of note names:
   thirds by key colour, the tritone clock, the inversion bench (lift the bottom
   note an octave and watch it become its partner) and the scale gym (whole-tone,
-  chromatic and both blues scales, lighting up key by key as they play).
-- **Ear** — hear it, name it. Up, down or together; low, mid or high register.
-- **Eyes** — read it off the staff, in any key signature and either clef.
-- **Hands** — build it on the keyboard from a given root.
+  chromatic, diminished, augmented, the seven modes, harmonic and melodic
+  minor, the pentatonics, both blues scales and six Carnatic ragas — 23 in
+  all, lighting up key by key as they play).
+- **Ear** — hear it, name it. Up, down or together; low, mid, high or roaming
+  register; a "wide" spread; and an "in key" mode that sounds the tonic triad
+  first so the interval is heard in context rather than in a vacuum.
+- **Eyes** — read it off the staff, in any key signature and either clef, with
+  ledger lines (notes pushed off the staff), compound intervals (a 9th to be
+  read as a 2nd) and a fresh random key every question.
+- **Hands** — build it on the keyboard. Takes **real MIDI input** (Web MIDI,
+  octave-agnostic so you can play it anywhere on an 88-key board) or the
+  computer keyboard, as well as the on-screen keys.
 - **Voice** — hear the root, sing the interval, hold it for a second. Live pitch
   detection, octave-agnostic so any voice type can practise.
 
@@ -54,6 +62,20 @@ localStorage, so you can see which distances you actually own.
 - A derivation ladder that draws the arithmetic (`G root → D P5 → +2 → E M6`).
 - Transposing-instrument view: read the same interval as a B♭, E♭ or F player.
 - Circle-step readout: every interval as a number of hops around the circle.
+
+## The microphone
+
+Voice uses the mic-acquisition ladder ported from Prima Vista
+(`js/mic.js`). It exists because **Zoom, Teams and Meet install virtual audio
+devices that frequently become the default input on macOS**, and the browser
+then hands back a live stream that is digitally silent — permission granted,
+track live, every sample zero. Span now retries across devices, names the
+conferencing device when it finds one, offers a picker, re-opens the mic when
+the system input changes, and runs a 4-second silence watchdog.
+
+The analysis loop is `setInterval` at 25 ms, **not** `requestAnimationFrame`,
+which browsers throttle to a crawl in background tabs — exactly the situation
+during a call.
 
 ## Running it
 
