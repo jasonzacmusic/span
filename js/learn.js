@@ -7,7 +7,10 @@ import {
 } from './data.js';
 import { Piano, placeInterval } from './piano.js';
 import { Circle } from './circle.js';
-import { renderThirdsLab, renderTritoneLab, renderInversionLab, renderScaleGym } from './labs.js';
+import {
+  renderThirdsLab, renderTritoneLab, renderInversionLab, renderScaleGym,
+  renderRulerLab, renderCharacterLab, renderQualityLab, renderTriadLab, renderSargamLab,
+} from './labs.js';
 import { drawInterval } from './staff.js';
 import { playInterval, playNote, unlockAudio } from './audio.js';
 import { iconLabel } from './icons.js';
@@ -195,7 +198,7 @@ function setRoot(name, autoplay = false) {
   renderAll();
   // the gym is built around the root, so it only rebuilds when the root moves
   const gym = document.getElementById('scaleGym');
-  if (gym && gym.querySelector('.lab-body')) renderScaleGym(gym, state.root);
+  if (gym && gym.querySelector('.lab-body')) { renderScaleGym(gym, state.root); renderRootLabs(); }
   if (autoplay) playCurrent('up');
 }
 
@@ -210,7 +213,21 @@ function renderLabs() {
   });
   renderInversionLab(document.getElementById('inversionLab'), state.root, state.iv);
   renderScaleGym(document.getElementById('scaleGym'), state.root);
+  renderRootLabs();
 }
+
+/* Everything that hangs off the current root. */
+function renderRootLabs() {
+  const pick = (id) => { state.iv = id; renderAll(); playCurrent('up'); };
+  renderRulerLab(document.getElementById('rulerLab'), state.root, pick);
+  renderCharacterLab(document.getElementById('characterLab'), state.root, pick);
+  renderQualityLab(document.getElementById('qualityLab'), state.root, qualityNum);
+  renderTriadLab(document.getElementById('triadLab'), state.root, triadId);
+  renderSargamLab(document.getElementById('sargamLab'), state.root);
+}
+
+let qualityNum = 3;
+let triadId = 'major';
 
 let thirdsWhich = 'M3';
 

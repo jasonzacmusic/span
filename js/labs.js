@@ -3,7 +3,10 @@
    keyboard, not a list of note names. */
 
 import * as T from './theory.js';
-import { FAMILY_COLOR, INTERVAL_BY_ID, THIRDS_SHAPES, TRITONE_PAIRS } from './data.js';
+import {
+  FAMILY_COLOR, INTERVAL_BY_ID, INTERVALS, THIRDS_SHAPES, TRITONE_PAIRS,
+  CHARACTERS, TRIADS, GAP_NAME, QUALITY_CHAIN, QUALITY_NAME, QUALITY_SHORT, SARGAM_LADDER,
+} from './data.js';
 import { keyboardSVG, shapeGlyph, isBlack } from './keys.js';
 import { playInterval, playNote, playSequence, unlockAudio } from './audio.js';
 import { icon, iconLabel } from './icons.js';
@@ -270,4 +273,196 @@ export function renderScaleGym(el, rootName) {
     draw(GYM_SCALES.find((s) => s.id === b.dataset.gym));
   }));
   draw(GYM_SCALES[0]);
+}
+
+/* ─────────── 5. The ruler: all twelve from one root ─────────── */
+
+/* The page Jason asks every student to write out by hand — "intervals of A"
+   as a heading, then all twelve, then categorised. Here it draws itself. */
+export function renderRulerLab(el, rootName, onPick) {
+  const rootNote = near(T.parseNote(rootName), 60);
+  const rootMidi = T.midi(rootNote);
+  const rows = INTERVALS.filter((iv) => !iv.bonus).map((iv) => {
+    const target = iv.id === 'TT' ? T.spellTritone(rootNote, 1)
+      : T.transpose(rootNote, { num: iv.num, quality: iv.quality }, 1);
+    const ch = CHARACTERS.find((c) => c.id === iv.character);
+    return { iv, target, ch, midi: rootMidi + iv.semis };
+  });
+
+  // number every key 1..12 instead of flooding the keyboard with colour;
+  // a row click lights just that one
+  const drawKb = (litId) => {
+    const lit = rows.find((r) => r.iv.id === litId);
+    const marks = [{ midi: rootMidi, kind: 'root', label: T.noteName(rootNote) }].concat(
+      rows.map((r) => (lit && r.iv.id === litId
+        ? { midi: r.midi, kind: 'step', color: r.ch.color, label: T.noteName(r.target) }
+        : { midi: r.midi, kind: 'plain', label: String(r.iv.semis) })),
+    );
+    return keyboardSVG(marks, {
+      size: 'md', range: [rootMidi, rootMidi + 12],
+      arc: lit ? { from: rootMidi, to: lit.midi, color: lit.ch.color } : null,
+    });
+  };
+
+  el.querySelector('.lab-body').innerHTML = `
+    <div class="ruler-kb">${drawKb(null)}</div>
+    <div class="ruler-rows">${rows.map((r) => `
+      <button class="ruler-row" data-iv="${r.iv.id}" style="--fam:${FAMILY_COLOR[r.iv.family]};--ch:${r.ch.color}">
+        <span class="rr-semis">${r.iv.semis}</span>
+        <span class="rr-short">${r.iv.short}</span>
+        <span class="rr-note">${T.noteName(r.target)}</span>
+        <span class="rr-label">${r.iv.label}</span>
+        <span class="rr-sargam">${r.iv.sargam}</span>
+        <span class="rr-char">${r.ch.label}</span>
+      </button>`).join('')}</div>`;
+
+  el.querySelectorAll('.ruler-row').forEach((b) => b.addEventListener('click', () => {
+    unlockAudio();
+    const r = rows.find((x) => x.iv.id === b.dataset.iv);
+    playInterval(rootMidi, r.midi, 'up');
+    el.querySelector('.ruler-kb').innerHTML = drawKb(b.dataset.iv);
+    el.querySelectorAll('.ruler-row').forEach((x) => x.classList.toggle('on', x === b));
+    if (onPick) onPick(b.dataset.iv);
+  }));
+}
+
+/* ─────────── 6. Character: the four moods ─────────── */
+
+export function renderCharacterLab(el, rootName, onPick) {
+  const rootNote = near(T.parseNote(rootName), 60);
+  const rootMidi = T.midi(rootNote);
+
+  el.querySelector('.lab-body').innerHTML = `<div class="char-grid">${CHARACTERS.map((c) => `
+    <div class="char-col" style="--ch:${c.color}">
+      <div class="char-head"><h4>${c.label}</h4><p>${c.blurb}</p></div>
+      <div class="char-chips">${c.set.map((id) => {
+    const iv = INTERVAL_BY_ID[id];
+    const target = id === 'TT' ? T.spellTritone(rootNote, 1)
+      : T.transpose(rootNote, { num: iv.num, quality: iv.quality }, 1);
+    return `<button class="char-chip" data-iv="${id}" data-semis="${iv.semis}">
+          <b>${iv.short}</b><span>${T.noteName(rootNote)}·${T.noteName(target)}</span></button>`;
+  }).join('')}</div>
+    </div>`).join('')}</div>
+    <p class="char-note">“An interval is the vibe created when two musical notes collide.”
+      Play each column back to back and the four moods separate themselves.</p>`;
+
+  el.querySelectorAll('.char-chip').forEach((b) => b.addEventListener('click', () => {
+    unlockAudio();
+    playInterval(rootMidi, rootMidi + Number(b.dataset.semis), 'harmonic');
+    if (onPick) onPick(b.dataset.iv);
+  }));
+}
+
+/* ─────────── 7. The quality shifter ─────────── */
+
+export function renderQualityLab(el, rootName, num) {
+  const rootNote = near(T.parseNote(rootName), 60);
+  const rootMidi = T.midi(rootNote);
+  const perfect = [1, 4, 5, 8].includes(num);
+  const chain = perfect ? QUALITY_CHAIN.perfect : QUALITY_CHAIN.major;
+
+  const steps = chain.map((q) => {
+    const note = T.transpose(rootNote, { num, quality: q }, 1);
+    return { q, note, semis: T.midi(note) - rootMidi, ok: Math.abs(note.acc) <= 2 };
+  }).filter((s) => s.ok);
+
+  el.querySelector('.lab-body').innerHTML = `
+    <div class="qual-picker">${[2, 3, 4, 5, 6, 7].map((n) => `<button class="qual-num${n === num ? ' active' : ''}" data-num="${n}">${n}${n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'}</button>`).join('')}</div>
+    <div class="qual-chain">${steps.map((s, i) => `
+      ${i ? '<span class="qual-arrow">♯ →</span>' : ''}
+      <button class="qual-step${s.q === 'M' || s.q === 'P' ? ' anchor' : ''}" data-semis="${s.semis}">
+        <span class="qs-name">${QUALITY_NAME[s.q]}</span>
+        <span class="qs-note">${T.noteName(s.note)}</span>
+        <span class="qs-tag">${QUALITY_SHORT[s.q]}${num} · ${s.semis} st</span>
+      </button>`).join('')}</div>
+    <p class="qual-note">${perfect
+    ? 'A 4th, 5th, unison or octave is <b>perfect</b> — it has no major or minor. Flatten it and it is diminished; sharpen it and it is augmented.'
+    : 'A 2nd, 3rd, 6th or 7th is <b>major</b> by default. One flat makes it minor, two makes it diminished; one sharp makes it augmented.'}</p>`;
+
+  el.querySelectorAll('.qual-num').forEach((b) => b.addEventListener('click', () => {
+    renderQualityLab(el, rootName, Number(b.dataset.num));
+  }));
+  el.querySelectorAll('.qual-step').forEach((b) => b.addEventListener('click', () => {
+    unlockAudio();
+    playInterval(rootMidi, rootMidi + Number(b.dataset.semis), 'up');
+  }));
+}
+
+/* ─────────── 8. Triad anatomy ─────────── */
+
+export function renderTriadLab(el, rootName, triadId) {
+  const tri = TRIADS.find((t) => t.id === triadId) || TRIADS[0];
+  const rootNote = near(T.parseNote(rootName), 60);
+  const rootMidi = T.midi(rootNote);
+  const color = FAMILY_COLOR.thirds;
+
+  // three voicings: root position, 1st and 2nd inversion
+  const voicings = [0, 1, 2].map((inv) => {
+    const order = tri.semis.slice(inv).concat(tri.semis.slice(0, inv).map((s) => s + 12));
+    const midis = order.map((s) => rootMidi + s);
+    const gaps = [midis[1] - midis[0], midis[2] - midis[1]];
+    return {
+      inv, midis, gaps,
+      outer: GAP_NAME[midis[2] - midis[0]],
+      name: ['Root position', '1st inversion', '2nd inversion'][inv],
+    };
+  });
+
+  el.querySelector('.lab-body').innerHTML = `
+    <div class="triad-picker">${TRIADS.map((t) => `<button class="triad-tab${t.id === tri.id ? ' active' : ''}" data-t="${t.id}">${t.label}</button>`).join('')}</div>
+    <p class="triad-recipe">Two thirds, stacked: <b>${tri.stack[0]}</b> then <b>${tri.stack[1]}</b>.
+      The outer shell is a <b>${tri.outer}</b>.</p>
+    <div class="triad-rows">${voicings.map((v) => `
+      <div class="triad-row">
+        <span class="tr-name">${v.name}</span>
+        <div class="tr-kb">${keyboardSVG(v.midis.map((m, i) => ({
+    midi: m, kind: i === 0 ? 'root' : 'target', color, label: T.noteName(spellTriadNote(rootNote, tri, v.inv, i)),
+  })), { size: 'sm', minWhite: 10, arc: { from: v.midis[0], to: v.midis[2], color } })}</div>
+        <span class="tr-anatomy">
+          <em>${GAP_NAME[v.gaps[0]]}</em><i>${v.gaps[0]}</i>
+          <em>${GAP_NAME[v.gaps[1]]}</em><i>${v.gaps[1]}</i>
+          <b>outer ${v.outer}</b>
+        </span>
+        <button class="ghost-btn" data-play="${v.midis.join(',')}">hear it</button>
+      </div>`).join('')}</div>`;
+
+  el.querySelectorAll('.triad-tab').forEach((b) => b.addEventListener('click', () => {
+    renderTriadLab(el, rootName, b.dataset.t);
+  }));
+  el.querySelectorAll('[data-play]').forEach((b) => b.addEventListener('click', () => {
+    unlockAudio();
+    b.dataset.play.split(',').forEach((m) => playNote(Number(m), 0, 1.6, 0.38));
+  }));
+}
+
+/* Spell a triad tone properly: stack real thirds, then rotate. */
+function spellTriadNote(rootNote, tri, inv, idx) {
+  const third = tri.stack[0] === 'M3' ? { num: 3, quality: 'M' } : { num: 3, quality: 'm' };
+  const second = tri.stack[1] === 'M3' ? { num: 3, quality: 'M' } : { num: 3, quality: 'm' };
+  const chord = [rootNote, T.transpose(rootNote, third, 1)];
+  chord.push(T.transpose(chord[1], second, 1));
+  return chord[(inv + idx) % 3];
+}
+
+/* ─────────── 9. The sargam ladder ─────────── */
+
+export function renderSargamLab(el, rootName) {
+  const rootNote = near(T.parseNote(rootName), 60);
+  const rootMidi = T.midi(rootNote);
+
+  el.querySelector('.lab-body').innerHTML = `
+    <div class="sargam-ladder">${SARGAM_LADDER.map((s) => `
+      <button class="sg-step${s.swara.length > 1 ? ' shared' : ''}" data-semis="${s.semis}">
+        <span class="sg-swara">${s.swara.join(' · ')}</span>
+        <span class="sg-west">${s.western.join(' · ')}</span>
+        <span class="sg-full">${s.full.join(' · ')}</span>
+      </button>`).join('')}</div>
+    <p class="sargam-note">Twelve keys, sixteen swara names — because six positions carry two names each.
+      That overlap is exactly how <b>6 × 2 × 6 = 72</b> melakarta are counted:
+      six Ri–Ga pairs, two Ma, six Dha–Ni pairs.</p>`;
+
+  el.querySelectorAll('.sg-step').forEach((b) => b.addEventListener('click', () => {
+    unlockAudio();
+    playInterval(rootMidi, rootMidi + Number(b.dataset.semis), 'up');
+  }));
 }

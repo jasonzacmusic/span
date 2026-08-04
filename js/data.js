@@ -8,6 +8,7 @@ export const INTERVALS = [
     trick: 'Root + 1 — a single chromatic step.',
     derive: { anchor: 'root', offset: 1, text: 'root + 1' },
     practice: 'Run the chromatic scale up and down.',
+    character: 'tension', compound: 'm9', jazz: '♭9',
     inversion: 'M7', sargam: 'r', sargamName: 'komal Re',
     songs: { up: 'Jaws', down: 'Für Elise' },
   },
@@ -17,6 +18,7 @@ export const INTERVALS = [
     trick: 'Root + 2 — one whole step.',
     derive: { anchor: 'root', offset: 2, text: 'root + 2' },
     practice: 'Run the whole-tone scale — six notes, all major 2nds.',
+    character: 'anticipation', compound: 'M9', jazz: '9',
     inversion: 'm7', sargam: 'R', sargamName: 'shuddha Re',
     songs: { up: 'Happy Birthday', down: 'Yesterday' },
   },
@@ -26,6 +28,7 @@ export const INTERVALS = [
     trick: 'Memorize by shape: 4 white–white, 3 white–black, 3 black–white, 2 black–black.',
     derive: null,
     practice: 'Toggle each shape set — melodic in one hand, harmonic in the other.',
+    character: 'resolution', compound: 'm10', jazz: '♯9',
     inversion: 'M6', sargam: 'g', sargamName: 'komal Ga',
     songs: { up: 'Greensleeves', down: 'Hey Jude' },
   },
@@ -35,6 +38,7 @@ export const INTERVALS = [
     trick: 'Memorize by shape: 3 white–white (C·E, F·A, G·B), 4 white–black, 4 black–white, 1 black–black.',
     derive: null,
     practice: 'Chant the sets, then walk them around the circle of fifths.',
+    character: 'resolution', compound: 'M10', jazz: '10',
     inversion: 'm6', sargam: 'G', sargamName: 'shuddha Ga',
     songs: { up: 'When the Saints', down: 'Swing Low, Sweet Chariot' },
   },
@@ -44,6 +48,7 @@ export const INTERVALS = [
     trick: 'Circle of fifths, one step counter-clockwise.',
     derive: null,
     practice: 'Chant the reverse circle: C F B♭ E♭ A♭ D♭ G♭ B E A D G C.',
+    character: 'anticipation', compound: 'P11', jazz: '11',
     inversion: 'P5', sargam: 'm', sargamName: 'shuddha Ma',
     songs: { up: 'Here Comes the Bride', down: 'Born Free' },
   },
@@ -53,6 +58,7 @@ export const INTERVALS = [
     trick: 'P4 + 1 or P5 − 1. Six mirror pairs — the only interval that inverts into itself.',
     derive: { anchor: 'P5', offset: -1, text: 'P5 − 1' },
     practice: 'Straight across the circle — memorize the six pairs.',
+    character: 'tension', compound: 'A11', jazz: '♯11',
     inversion: 'TT', sargam: 'M', sargamName: 'tivra Ma',
     songs: { up: 'The Simpsons', down: 'Black Sabbath' },
   },
@@ -62,6 +68,7 @@ export const INTERVALS = [
     trick: 'Circle of fifths, one step clockwise. The tanpura’s Sa–Pa.',
     derive: null,
     practice: 'Chant the circle: C G D A E B F♯ D♭ A♭ E♭ B♭ F C.',
+    character: 'resolution', compound: 'P12', jazz: '12',
     inversion: 'P4', sargam: 'P', sargamName: 'Pa',
     songs: { up: 'Twinkle Twinkle · Star Wars', down: 'The Flintstones' },
   },
@@ -71,6 +78,7 @@ export const INTERVALS = [
     trick: 'P5 + 1. Or flip a major 3rd upside-down.',
     derive: { anchor: 'P5', offset: 1, text: 'P5 + 1' },
     practice: 'Find the fifth first, nudge one up.',
+    character: 'mystery', compound: 'm13', jazz: '♭13',
     inversion: 'M3', sargam: 'd', sargamName: 'komal Dha',
     songs: { up: 'The Entertainer', down: 'Love Story' },
   },
@@ -80,6 +88,7 @@ export const INTERVALS = [
     trick: 'P5 + 2. Or flip a minor 3rd upside-down.',
     derive: { anchor: 'P5', offset: 2, text: 'P5 + 2' },
     practice: 'Find the fifth first, walk two up.',
+    character: 'mystery', compound: 'M13', jazz: '13',
     inversion: 'm3', sargam: 'D', sargamName: 'shuddha Dha',
     songs: { up: 'My Bonnie · NBC chime', down: 'Nobody Knows the Trouble' },
   },
@@ -89,6 +98,7 @@ export const INTERVALS = [
     trick: 'Octave − 2. Don’t reach up — think down from the octave.',
     derive: { anchor: 'P8', offset: -2, text: 'octave − 2' },
     practice: 'Land the octave, step down two.',
+    character: 'anticipation', compound: 'm14', jazz: '♭7',
     inversion: 'M2', sargam: 'n', sargamName: 'komal Ni',
     songs: { up: 'Star Trek (original)', down: 'think octave − 2' },
   },
@@ -98,6 +108,7 @@ export const INTERVALS = [
     trick: 'Octave − 1. A big jump made easy.',
     derive: { anchor: 'P8', offset: -1, text: 'octave − 1' },
     practice: 'Land the octave, slide one down.',
+    character: 'tension', compound: 'M14', jazz: 'maj7',
     inversion: 'm2', sargam: 'N', sargamName: 'shuddha Ni',
     songs: { up: 'Take On Me', down: 'I Love You (Porter)' },
   },
@@ -107,6 +118,7 @@ export const INTERVALS = [
     trick: 'Same letter, double the frequency.',
     derive: null,
     practice: 'The anchor for every seventh.',
+    character: 'resolution', compound: 'P15', jazz: '8ve',
     inversion: 'P8', sargam: 'Ṡ', sargamName: 'taar Sa',
     songs: { up: 'Somewhere Over the Rainbow', down: 'Willow Weep for Me' },
   },
@@ -116,6 +128,7 @@ export const INTERVALS = [
     trick: 'Octave − 3. Same sound as a major 6th, spelled diminished.',
     derive: { anchor: 'P8', offset: -3, text: 'octave − 3' },
     practice: 'The outer shell of the diminished 7th chord.',
+    character: 'mystery', compound: 'd14', jazz: '♭d7',
     inversion: 'A2', sargam: 'D', sargamName: '(as Dha)',
     songs: { up: 'dim7 chord shell', down: 'octave − 3' },
   },
@@ -177,4 +190,72 @@ export const PRESETS = [
   { id: 'anchors', label: 'The Anchors', set: ['P4', 'P5', 'TT', 'M3', 'm3'] },
   { id: 'derived', label: 'Derived', set: ['m2', 'M2', 'm6', 'M6', 'm7', 'M7'] },
   { id: 'all', label: 'All Twelve', set: ['m2', 'M2', 'm3', 'M3', 'P4', 'TT', 'P5', 'm6', 'M6', 'm7', 'M7', 'P8'] },
+];
+
+/* Jason's four-way classification — his own framework, including "mystery",
+   which he adds because the sixths behave as both anticipation and resolution.
+   From music-theory/07-remembering-intervals-part-1. */
+export const CHARACTERS = [
+  {
+    id: 'resolution', label: 'Resolution', color: '#2f6b34',
+    blurb: 'At rest. Stable, peaceful, home.',
+    set: ['P8', 'P5', 'M3', 'm3'],
+  },
+  {
+    id: 'anticipation', label: 'Anticipation', color: '#1c3f7c',
+    blurb: 'Leaning somewhere. It wants to move on.',
+    set: ['P4', 'm7', 'M2'],
+  },
+  {
+    id: 'mystery', label: 'Mystery', color: '#6b3a7a',
+    blurb: 'Sometimes it settles, sometimes it pulls. Jason’s own fourth category.',
+    set: ['M6', 'm6'],
+  },
+  {
+    id: 'tension', label: 'Tension', color: '#a8271b',
+    blurb: 'Chaos on its own — beautiful once you add a third note.',
+    set: ['M7', 'm2', 'TT'],
+  },
+];
+
+/* Triads are what intervals are FOR: two thirds stacked. */
+export const TRIADS = [
+  { id: 'major', label: 'Major', stack: ['M3', 'm3'], semis: [0, 4, 7], outer: 'P5', face: 'happy' },
+  { id: 'minor', label: 'Minor', stack: ['m3', 'M3'], semis: [0, 3, 7], outer: 'P5', face: 'sad' },
+  { id: 'dim', label: 'Diminished', stack: ['m3', 'm3'], semis: [0, 3, 6], outer: 'TT', face: 'uneasy' },
+  { id: 'aug', label: 'Augmented', stack: ['M3', 'M3'], semis: [0, 4, 8], outer: 'm6', face: 'unsettled' },
+];
+
+/* Semitone gap → the interval that gap spells, for triad anatomy. */
+export const GAP_NAME = {
+  1: 'm2', 2: 'M2', 3: 'm3', 4: 'M3', 5: 'P4', 6: 'TT',
+  7: 'P5', 8: 'm6', 9: 'M6', 10: 'm7', 11: 'M7', 12: 'P8',
+};
+
+/* Quality chains — flatten and sharpen a number and watch its name change.
+   Perfect-class numbers have no major/minor; major-class numbers do. */
+export const QUALITY_CHAIN = {
+  perfect: ['d', 'P', 'A'],
+  major: ['d', 'm', 'M', 'A'],
+};
+export const QUALITY_NAME = { d: 'diminished', m: 'minor', M: 'MAJOR', P: 'perfect', A: 'augmented' };
+export const QUALITY_SHORT = { d: 'dim', m: 'm', M: 'M', P: 'P', A: 'aug' };
+
+/* The Carnatic ladder, twelve positions from Sa. Where two swaras share a
+   position they are genuinely the same key with two names — which is exactly
+   how 6 x 2 x 6 = 72 melakarta are counted. */
+export const SARGAM_LADDER = [
+  { semis: 0, swara: ['Sa'], full: ['shadja'], western: ['unison'] },
+  { semis: 1, swara: ['r1'], full: ['shuddha Ri'], western: ['m2'] },
+  { semis: 2, swara: ['r2', 'g1'], full: ['chatushruti Ri', 'shuddha Ga'], western: ['M2', 'dim3'] },
+  { semis: 3, swara: ['r3', 'g2'], full: ['shatshruti Ri', 'sadharana Ga'], western: ['A2', 'm3'] },
+  { semis: 4, swara: ['g3'], full: ['antara Ga'], western: ['M3'] },
+  { semis: 5, swara: ['m1'], full: ['shuddha Ma'], western: ['P4'] },
+  { semis: 6, swara: ['m2'], full: ['prati Ma'], western: ['A4 · d5'] },
+  { semis: 7, swara: ['Pa'], full: ['panchama'], western: ['P5'] },
+  { semis: 8, swara: ['d1'], full: ['shuddha Dha'], western: ['m6'] },
+  { semis: 9, swara: ['d2', 'n1'], full: ['chatushruti Dha', 'shuddha Ni'], western: ['M6', 'd7'] },
+  { semis: 10, swara: ['d3', 'n2'], full: ['shatshruti Dha', 'kaisiki Ni'], western: ['A6', 'm7'] },
+  { semis: 11, swara: ['n3'], full: ['kakali Ni'], western: ['M7'] },
+  { semis: 12, swara: ['Ṡa'], full: ['taara shadja'], western: ['octave'] },
 ];
