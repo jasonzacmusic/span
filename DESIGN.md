@@ -251,6 +251,14 @@ on keys.
   ems. Musical and diagrammatic glyphs (♯ ♭ ▲ ▼ ⟳ ⟲ ⇄ →) stay as *type*,
   because they are notation, not interface.
 
+**One detector waiver.** `layout-transition` is ignored for `css/style.css`
+(recorded in `.impeccable/config.json`). The rule matches the substring "width"
+and fires on `stroke-width` transitions used by the circle-of-fifths nodes and
+the tritone diameters. SVG stroke width is a paint attribute, not a CSS box
+dimension — it reflows nothing, and the hover thickening is the affordance that
+says those shapes are clickable. The waiver is scoped to this one file so the
+rule still applies everywhere else.
+
 ## Do's and Don'ts
 
 **Do**
