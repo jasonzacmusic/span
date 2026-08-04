@@ -7,13 +7,27 @@ import { placeInterval } from './piano.js';
 import { keyboardSVG } from './keys.js';
 import { playNote, unlockAudio, audioContext } from './audio.js';
 import { icon } from './icons.js';
+import {
+  openMic, listMicDevices, loadPreferredMic, savePreferredMic, onDeviceChange, unsupportedReason,
+} from './mic.js';
 
 const HOLD_MS = 900;
 const TOL_CENTS = 35;
 
 let media = null;
 let analyser = null;
-let raf = 0;
+let timer = 0;
+let stopDeviceWatch = null;
+let silentSince = 0;
+let sawSignal = false;
+
+/* Interval-driven, NOT requestAnimationFrame: rAF is throttled to a crawl in
+   background tabs and low-power mode, which is exactly the situation during
+   a Zoom call. 25 ms keeps detection running regardless. */
+const TICK_MS = 25;
+/* If a live track produces nothing but digital silence for this long, the
+   input is almost certainly a conferencing device. */
+const SILENCE_MS = 4000;
 let q = null;
 let enabled = new Set(PRESETS[0].set);
 let holdStart = 0;
@@ -137,10 +151,21 @@ function success() {
   setTimeout(newQuestion, 1800);
 }
 
-function loop() {
+function tick() {
   const u = ui();
+  if (!analyser) return;
   const buf = new Float32Array(analyser.fftSize);
   analyser.getFloatTimeDomainData(buf);
+
+  // watchdog: a live track that is bit-for-bit silent means a virtual device
+  let peak = 0;
+  for (let i = 0; i < buf.length; i += 8) peak = Math.max(peak, Math.abs(buf[i]));
+  if (peak > 0.0004) { sawSignal = true; silentSince = 0; hideSilenceWarning(); }
+  else if (!sawSignal) {
+    if (!silentSince) silentSince = performance.now();
+    else if (performance.now() - silentSince > SILENCE_MS) showSilenceWarning();
+  }
+
   const f = detectPitch(buf, audioContext().sampleRate);
   if (f > 60 && f < 1200 && q && !solved) {
     const cents = centsOff(f, q.targetMidi % 12);
@@ -159,31 +184,123 @@ function loop() {
     if (!solved) u.heard.textContent = 'listening…';
     holdStart = 0;
   }
-  raf = requestAnimationFrame(loop);
+}
+
+function startLoop() {
+  if (timer) return;
+  timer = window.setInterval(tick, TICK_MS);
+}
+
+function showSilenceWarning() {
+  const el = document.getElementById('voiceAlert');
+  if (!el || el.dataset.kind === 'silent') return;
+  el.dataset.kind = 'silent';
+  el.className = 'voice-alert show';
+  el.innerHTML = 'Span can hear the microphone open, but every sample is silent — that is what a '
+    + '<b>Zoom, Teams or Meet</b> input does to a web page. Mute yourself in the call, or pick your real '
+    + 'microphone below.';
+  buildDevicePicker();
+}
+
+function hideSilenceWarning() {
+  const el = document.getElementById('voiceAlert');
+  if (el && el.dataset.kind === 'silent') { el.className = 'voice-alert'; el.dataset.kind = ''; }
 }
 
 async function start() {
   const u = ui();
   try {
     unlockAudio();
-    media = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
-    });
-    const ac = audioContext();
-    const src = ac.createMediaStreamSource(media);
-    analyser = ac.createAnalyser();
-    analyser.fftSize = 2048;
-    src.connect(analyser);
+    const res = await openMic(loadPreferredMic());
+    attachStream(res.stream);
+    if (res.deviceId) savePreferredMic(res.deviceId);
     u.status.style.display = 'none';
     document.getElementById('voiceStage').style.display = '';
+    showDeviceLine(res.label, res.warning);
+    await buildDevicePicker();
+    watchDevices();
     newQuestion();
-    loop();
+    startLoop();
   } catch (err) {
-    u.status.innerHTML = `<p>Microphone access is needed for Voice mode.<br>
-      <span class="dim-text">Allow the mic in your browser’s address bar, then try again.</span></p>
-      <button class="play-btn" id="voiceStartBtn">Enable microphone</button>`;
+    u.status.innerHTML = `<div class="plate voice-intro">
+        <span class="plate-label">microphone</span>
+        <p class="mic-error">${err.message}</p>
+        <button class="play-btn primary" id="voiceStartBtn">Try again</button>
+        <div id="voicePickerSlot"></div>
+      </div>`;
     document.getElementById('voiceStartBtn').addEventListener('click', start);
+    await buildDevicePicker(document.getElementById('voicePickerSlot'));
   }
+}
+
+function attachStream(stream) {
+  if (media) media.getTracks().forEach((t) => t.stop());
+  media = stream;
+  sawSignal = false;
+  silentSince = 0;
+  const ac = audioContext();
+  const src = ac.createMediaStreamSource(stream);
+  analyser = ac.createAnalyser();
+  analyser.fftSize = 2048;
+  src.connect(analyser);
+}
+
+function showDeviceLine(label, warning) {
+  const el = document.getElementById('voiceDevice');
+  if (el) el.innerHTML = `listening on <b>${label}</b>`;
+  const alert = document.getElementById('voiceAlert');
+  if (alert && warning) {
+    alert.dataset.kind = 'warn';
+    alert.className = 'voice-alert show';
+    alert.textContent = warning;
+  }
+}
+
+/* A real picker, because the retry ladder cannot know which of three live
+   inputs is the one with the singer in front of it. */
+async function buildDevicePicker(slot) {
+  const host = slot || document.getElementById('voicePicker');
+  if (!host) return;
+  const devices = await listMicDevices();
+  if (devices.length < 2) { host.innerHTML = ''; return; }
+  const current = loadPreferredMic();
+  host.innerHTML = `<label class="sel-label mic-pick">input
+    <select class="sel" id="voiceDeviceSel">${devices.map((d) => `
+      <option value="${d.deviceId}"${d.deviceId === current ? ' selected' : ''}>${d.label}${d.virtual ? '  ⚠ conferencing device' : ''}</option>`).join('')}
+    </select></label>`;
+  host.querySelector('#voiceDeviceSel').addEventListener('change', async (e) => {
+    savePreferredMic(e.target.value);
+    try {
+      const res = await openMic(e.target.value);
+      attachStream(res.stream);
+      showDeviceLine(res.label, res.warning);
+      hideSilenceWarning();
+      const st = document.getElementById('voiceStatus');
+      if (st) st.style.display = 'none';
+      document.getElementById('voiceStage').style.display = '';
+      if (!q) newQuestion();
+      startLoop();
+    } catch (err) {
+      const alert = document.getElementById('voiceAlert');
+      if (alert) { alert.className = 'voice-alert show'; alert.textContent = err.message; }
+    }
+  });
+}
+
+/* Joining or leaving a call reassigns the system input; the stream we hold
+   keeps pointing at a device that has stopped producing audio. */
+function watchDevices() {
+  if (stopDeviceWatch) return;
+  stopDeviceWatch = onDeviceChange(async () => {
+    await buildDevicePicker();
+    if (!sawSignal) {
+      try {
+        const res = await openMic(loadPreferredMic());
+        attachStream(res.stream);
+        showDeviceLine(res.label, res.warning);
+      } catch { /* the picker is already on screen */ }
+    }
+  });
 }
 
 export function initVoice() {
@@ -198,6 +315,7 @@ export function initVoice() {
       </div>
       <button class="play-btn primary" id="voiceStartBtn">Enable microphone</button>
       <span class="dim-text">Any voice, any octave — the octave never counts against you.</span>
+      <span class="dim-text">Works while you are on a Zoom call — if the call grabs the mic, Span says so and lets you switch input.</span>
     </div>`;
   document.getElementById('voiceStartBtn').addEventListener('click', start);
 
@@ -220,10 +338,9 @@ export function initVoice() {
 
 export function stopVoice() {
   // pause analysis while another tab is showing; keep the mic stream alive
-  cancelAnimationFrame(raf);
-  raf = 0;
+  if (timer) { clearInterval(timer); timer = 0; }
 }
 
 export function voiceVisible() {
-  if (analyser && media && !raf) loop();
+  if (analyser && media) startLoop();
 }

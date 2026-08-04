@@ -16,22 +16,23 @@ export function fitToClef(notes, clef) {
 export function drawInterval(el, notes, opts = {}) {
   const {
     clef = 'treble', keySig = 'G', mode = 'melodic', width = 300, height = 150,
-    scale = 1,
+    scale = 1, fit = true,
   } = opts;
   const VF = Vex.Flow;
   el.innerHTML = '';
   const renderer = new VF.Renderer(el, VF.Renderer.Backends.SVG);
-  renderer.resize(width * scale, height * scale);
+  renderer.resize(width * scale, (height + 50) * scale);
   const ctx = renderer.getContext();
   if (scale !== 1) ctx.scale(scale, scale);
   // engraved straight onto the paper — ink, not pure black
   ctx.setFillStyle('#1a1713');
   ctx.setStrokeStyle('#1a1713');
-  const stave = new VF.Stave(6, 24, width - 14);
+  const stave = new VF.Stave(6, 40, width - 14);
   stave.addClef(clef).addKeySignature(keySig);
   stave.setContext(ctx).draw();
 
-  const fitted = fitToClef(notes, clef);
+  // ledger-line practice deliberately skips the auto-fit, so notes sit off the staff
+  const fitted = fit ? fitToClef(notes, clef) : notes;
   let tickables;
   if (mode === 'harmonic') {
     const sorted = [...fitted].sort((a, b) => midi(a) - midi(b));

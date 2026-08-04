@@ -735,7 +735,7 @@ main { flex: 1; width: min(1500px, 100%); margin: 0 auto; padding: 26px 34px 46p
   border-bottom: 1px solid var(--rule);
 }
 
-.drill-presets { display: flex; gap: 4px; }
+.drill-presets { display: flex; gap: 4px; flex-wrap: wrap; }
 .preset {
   font-family: var(--sans);
   font-size: 9.5px;
@@ -1132,6 +1132,8 @@ main { flex: 1; width: min(1500px, 100%); margin: 0 auto; padding: 26px 34px 46p
   .drill-prompt { font-size: 22px; }
   .drill-top { gap: 12px; }
   .drill-opts { margin-left: 0; }
+  .drill-presets { width: 100%; }
+  .preset { flex: 1 1 auto; min-width: 0; padding: 7px 8px; letter-spacing: 0.08em; }
   .plate, .plate-ear { padding: 20px 18px; }
   .voice-intro { padding: 26px 20px; font-size: 22px; }
   .staff-controls { min-width: 0; width: 100%; }
@@ -1342,3 +1344,69 @@ main { flex: 1; width: min(1500px, 100%); margin: 0 auto; padding: 26px 34px 46p
 .kb-badge.kind-plain text { fill: var(--ink-3); font-family: var(--mono); font-weight: 400; }
 .ruler-row.on { background: var(--surface-3); }
 .ruler-row.on .rr-note { color: var(--ch); }
+
+/* ─────────── voice: device line and alerts ─────────── */
+
+.voice-devline {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  margin-bottom: 4px;
+}
+.voice-devline b { color: var(--ink-2); font-weight: 400; }
+.mic-pick { gap: 7px; }
+.mic-pick .sel { width: auto; min-width: 190px; }
+
+.voice-alert { display: none; }
+.voice-alert.show {
+  display: block;
+  max-width: 62ch;
+  margin: 0 auto 6px;
+  padding: 12px 16px;
+  border: 1px solid var(--red);
+  background: var(--surface-2);
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink);
+  text-align: center;
+}
+.voice-alert.show b { color: var(--red); }
+.mic-error {
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink);
+  max-width: 56ch;
+  text-align: center;
+}
+
+/* scale gym: grouped picker */
+.gym-groups { display: flex; flex-direction: column; gap: 13px; margin-bottom: 20px; }
+.gym-group { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.gym-group-name {
+  font-family: var(--sans);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  min-width: 128px;
+}
+.gym-group .gym-picker { margin-bottom: 0; flex: 1; }
+@media (max-width: 760px) { .gym-group-name { min-width: 0; width: 100%; } }
+
+/* drills: character presets and MIDI status */
+.preset.char { --ch: var(--ink); border-color: var(--ch); color: var(--ch); }
+.preset.char:hover { background: var(--ch); border-color: var(--ch); color: var(--paper); }
+.midi-status {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+}
+.midi-status b { color: var(--ink-2); font-weight: 400; }

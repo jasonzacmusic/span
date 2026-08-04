@@ -8,6 +8,8 @@ import { keyboardSVG } from './keys.js';
 import { drawInterval } from './staff.js';
 import { playInterval, playNote, unlockAudio } from './audio.js';
 import { icon, iconLabel } from './icons.js';
+import { initMidi, onMidi, midiSupported, computerKeyToOffset } from './midi.js';
+import { CHARACTERS } from './data.js';
 
 const DRILL_IVS = INTERVALS.filter((iv) => !iv.bonus);
 const STORE_KEY = 'span-stats-v1';
@@ -28,6 +30,11 @@ function randomOf(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+/* e.target can be the document itself, which has no .matches(). */
+function isTypingTarget(el) {
+  return !!(el && typeof el.matches === 'function' && el.matches('input, select, textarea'));
+}
+
 class Drill {
   constructor(mode, viewEl, cfg) {
     this.mode = mode;           // 'ear' | 'eyes' | 'hands'
@@ -45,7 +52,7 @@ class Drill {
   build() {
     this.el.innerHTML = `
       <div class="drill-top">
-        <div class="drill-presets">${PRESETS.map((p) => `<button class="preset" data-p="${p.id}">${p.label}</button>`).join('')}</div>
+        <div class="drill-presets">${PRESETS.map((p) => `<button class="preset" data-p="${p.id}">${p.label}</button>`).join('')}${CHARACTERS.map((c) => `<button class="preset char" data-char="${c.id}" style="--ch:${c.color}">${c.label}</button>`).join('')}</div>
         <div class="drill-ivs">${DRILL_IVS.map((iv) => `<button class="mini-chip" data-iv="${iv.id}" style="--fam:${FAMILY_COLOR[iv.family]}">${iv.short}</button>`).join('')}</div>
         <div class="drill-opts">${this.cfg.optsHTML || ''}</div>
       </div>
@@ -69,6 +76,15 @@ class Drill {
     this.el.querySelectorAll('.preset').forEach((b) => {
       b.addEventListener('click', () => {
         this.enabled = new Set(PRESETS.find((p) => p.id === b.dataset.p).set);
+        this.syncChips();
+        this.next();
+      });
+    });
+    this.el.querySelectorAll('.preset.char').forEach((b) => {
+      b.addEventListener('click', () => {
+        const c = CHARACTERS.find((x) => x.id === b.dataset.char);
+        this.enabled = new Set(c.set.filter((id) => DRILL_IVS.some((iv) => iv.id === id)));
+        if (this.enabled.size < 2) c.set.forEach((id) => this.enabled.add(id));
         this.syncChips();
         this.next();
       });
@@ -198,7 +214,9 @@ function earConfig() {
       <label class="opt"><input type="checkbox" data-dir="down"> down</label>
       <label class="opt"><input type="checkbox" data-dir="harmonic"> together</label>
       <select class="sel" data-reg><option value="0" selected>mid register</option><option value="-12">low register</option><option value="12">high register</option><option value="rand">roaming register</option></select>
-      <label class="opt" title="spread the two notes more than an octave apart"><input type="checkbox" data-wide> wide</label>`,
+      <label class="opt" title="spread the two notes more than an octave apart"><input type="checkbox" data-wide> wide</label>
+      <label class="opt" title="hear a chord first so the interval sits in a key"><input type="checkbox" data-context> in key</label>
+      <label class="opt" title="the root moves every question"><input type="checkbox" data-roam checked> roaming root</label>`,
     wireOpts(d) {
       d.dirs = () => [...d.el.querySelectorAll('[data-dir]:checked')].map((c) => c.dataset.dir);
       d.reg = () => {
@@ -206,6 +224,8 @@ function earConfig() {
         return v === 'rand' ? randomOf([-12, -7, 0, 5, 12]) : parseInt(v, 10);
       };
       d.wide = () => d.el.querySelector('[data-wide]').checked;
+      d.context = () => d.el.querySelector('[data-context]').checked;
+      d.roam = () => d.el.querySelector('[data-roam]').checked;
       d.el.querySelectorAll('[data-dir]').forEach((c) => c.addEventListener('change', () => {
         if (d.dirs().length === 0) c.checked = true;
       }));
@@ -226,7 +246,16 @@ function earConfig() {
         <button class="big-play" title="replay (R)" aria-label="replay">${icon.play({ size: '21px' })}</button>
         <span class="ear-mode">${label}${spread ? ' · spread wide' : ''}</span>
         <span class="ear-hint">press <b>R</b> to replay · <b>1–9</b> to answer</span></div>`;
-      const play = () => playInterval(rm + off, tm + off + spread, mode);
+      const play = () => {
+        // "in key": sound the tonic triad first so the interval is heard in a
+        // context rather than in a vacuum — much closer to real listening
+        if (d.context()) {
+          [0, 4, 7].forEach((iv2) => playNote(rm + off + iv2, 0, 0.9, 0.26));
+          setTimeout(() => playInterval(rm + off, tm + off + spread, mode), 1000);
+        } else {
+          playInterval(rm + off, tm + off + spread, mode);
+        }
+      };
       d.visualEl.querySelector('.big-play').addEventListener('click', () => { unlockAudio(); play(); });
       setTimeout(() => { unlockAudio(); play(); }, 250);
       d.q_play = play;
@@ -243,20 +272,34 @@ function eyesConfig() {
     optsHTML: `
       <select class="sel" data-clef><option value="treble" selected>treble clef</option><option value="bass">bass clef</option></select>
       <select class="sel" data-key>${KEY_SIGS.map((k) => `<option${k === 'G' ? ' selected' : ''}>${k}</option>`).join('')}</select>
-      <select class="sel" data-smode><option value="melodic" selected>melodic</option><option value="harmonic">harmonic</option></select>`,
+      <select class="sel" data-smode><option value="melodic" selected>melodic</option><option value="harmonic">harmonic</option></select>
+      <label class="opt" title="push notes above and below the staff"><input type="checkbox" data-ledger> ledger lines</label>
+      <label class="opt" title="add an octave — a 9th, 11th, 13th"><input type="checkbox" data-compound> compound</label>
+      <label class="opt" title="a new key signature every question"><input type="checkbox" data-randkey> random key</label>`,
     wireOpts(d) {
       d.clef = () => d.el.querySelector('[data-clef]').value;
       d.keySig = () => d.el.querySelector('[data-key]').value;
       d.smode = () => d.el.querySelector('[data-smode]').value;
+      d.ledger = () => d.el.querySelector('[data-ledger]').checked;
+      d.compound = () => d.el.querySelector('[data-compound]').checked;
+      d.randkey = () => d.el.querySelector('[data-randkey]').checked;
     },
     makeQuestion(d, iv, rootName) {
       const rootNote = T.parseNote(rootName);
-      const target = spelledTarget(rootNote, iv, 1);
+      let target = spelledTarget(rootNote, iv, 1);
+      // compound: throw the upper note an octave further out, so the reader
+      // has to recognise a 9th as a 2nd, an 11th as a 4th
+      if (d.compound() && iv.id !== 'P8') target = { ...target, oct: target.oct + 1 };
+      // ledger lines: shove the whole pair off the staff
+      const shift = d.ledger() ? (Math.random() < 0.5 ? -2 : 2) : 0;
+      const lo = { ...rootNote, oct: rootNote.oct + shift };
+      const hi = { ...target, oct: target.oct + shift };
+      const keySig = d.randkey() ? randomOf(KEY_SIGS) : d.keySig();
       d.promptEl.innerHTML = `<span>Name this interval</span>`;
       d.visualEl.innerHTML = `<div class="plate"><div class="staff-box"></div>
         <button class="ghost-btn plate-hear" title="hear it (R)">hear it</button></div>`;
-      drawInterval(d.visualEl.querySelector('.staff-box'), [rootNote, target], {
-        clef: d.clef(), keySig: d.keySig(), mode: d.smode(), width: 300, scale: 1.5,
+      drawInterval(d.visualEl.querySelector('.staff-box'), [lo, hi], {
+        clef: d.clef(), keySig, mode: d.smode(), width: 300, scale: 1.5, fit: !d.ledger(),
       });
       d.visualEl.querySelector('.plate-hear').addEventListener('click', () => {
         unlockAudio();
@@ -281,7 +324,9 @@ function handsConfig() {
     optsHTML: `
       <label class="opt"><input type="checkbox" data-hdir="1" checked> up</label>
       <label class="opt"><input type="checkbox" data-hdir="-1"> down</label>
-      <label class="opt" title="find the root yourself as well"><input type="checkbox" data-both> build both notes</label>`,
+      <label class="opt" title="find the root yourself as well"><input type="checkbox" data-both> build both notes</label>
+      <span class="midi-status" data-midi-status>keyboard: <b>on-screen only</b></span>
+      <button class="ghost-btn" data-midi-connect>connect a MIDI keyboard</button>`,
     wireOpts(d) {
       d.hdirs = () => [...d.el.querySelectorAll('[data-hdir]:checked')].map((c) => parseInt(c.dataset.hdir, 10));
       d.both = () => d.el.querySelector('[data-both]').checked;
@@ -289,40 +334,82 @@ function handsConfig() {
         if (d.hdirs().length === 0) c.checked = true;
       }));
       d.el.querySelector('[data-both]').addEventListener('change', () => d.next());
+
+      // Play the answer on a real piano, not with a mouse.
+      const statusEl = d.el.querySelector('[data-midi-status]');
+      const connect = async () => {
+        const res = await initMidi();
+        if (!res.ok) {
+          statusEl.innerHTML = res.reason === 'unsupported'
+            ? 'keyboard: <b>MIDI needs Chrome or Edge</b>'
+            : 'keyboard: <b>MIDI was blocked</b>';
+          return;
+        }
+        const names = res.inputs.length ? res.inputs.join(', ') : 'none detected — plug one in';
+        statusEl.innerHTML = `keyboard: <b>${names}</b>`;
+        d.el.querySelector('[data-midi-connect]').style.display = 'none';
+      };
+      d.el.querySelector('[data-midi-connect]').addEventListener('click', connect);
+      if (!midiSupported()) statusEl.innerHTML = 'keyboard: <b>on-screen · MIDI needs Chrome</b>';
+
+      onMidi((ev) => {
+        if (ev.type !== 'noteon') return;
+        const active = document.querySelector('.view.active');
+        if (!active || active.id !== 'view-hands') return;
+        d.playKey(ev.note);
+      });
+
+      // the computer keyboard as a stand-in piano
+      document.addEventListener('keydown', (e) => {
+        const active = document.querySelector('.view.active');
+        if (!active || active.id !== 'view-hands') return;
+        if (isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+        const off = computerKeyToOffset(e.key);
+        if (off == null || !d.q) return;
+        e.preventDefault();
+        // anchor the computer keyboard to the octave the question sits in
+        const base = Math.floor(d.q.rootMidi / 12) * 12;
+        d.playKey(base + off);
+      });
     },
     setup(d) {
       const plate = document.createElement('div');
       plate.className = 'plate plate-keys';
       d.visualEl.appendChild(plate);
+      /* One handler for every way a key can arrive: mouse, MIDI keyboard or
+         the computer keyboard. Octave-agnostic on MIDI so the interval can
+         be played anywhere on an 88-key board. */
+      d.playKey = (midi, exact = false) => {
+        if (d.locked || !d.q) return;
+        unlockAudio();
+        const q = d.q;
+        const wantedExact = q.needRoot ? q.rootMidi : q.targetMidi;
+        const hit = exact ? midi === wantedExact
+          : midi === wantedExact || (((midi - wantedExact) % 12) + 12) % 12 === 0;
+        if (!hit) {
+          playNote(midi, 0, 0.35, 0.35);
+          d.piano.flashWrong(midi);
+          if (!q.missed) { q.missed = true; d.record(q.iv.id, false); d.markResult(false); }
+          return;
+        }
+        playNote(midi, 0, 1.0, 0.5);
+        if (q.needRoot) {
+          q.needRoot = false;
+          d.piano.show([{ midi: q.rootMidi, name: T.noteName(q.rootNote), kind: 'root' }]);
+          const h = d.el.querySelector('.hands-hint');
+          if (h) h.innerHTML = `<span>now play <b>${q.iv.label.toLowerCase()}</b> ${q.dir < 0 ? 'below' : 'above'} it</span>`;
+          return;
+        }
+        d.locked = true;
+        d.record(q.iv.id, !q.missed);
+        d.piano.show([
+          { midi: q.rootMidi, name: T.noteName(q.rootNote), kind: 'root' },
+          { midi: q.targetMidi, name: T.noteName(q.target), kind: 'target', color: FAMILY_COLOR[q.iv.family] },
+        ], { from: q.rootMidi, to: q.targetMidi, label: `${q.iv.semis} st`, color: FAMILY_COLOR[q.iv.family] });
+        d.reveal(!q.missed);
+      };
       d.piano = new Piano(plate.appendChild(document.createElement('div')), {
-        onKey: (midi) => {
-          if (d.locked || !d.q) return;
-          unlockAudio();
-          const q = d.q;
-          const wanted = q.needRoot ? q.rootMidi : q.targetMidi;
-          if (midi !== wanted) {
-            playNote(midi, 0, 0.35, 0.35);
-            d.piano.flashWrong(midi);
-            if (!q.missed) { q.missed = true; d.record(q.iv.id, false); d.markResult(false); }
-            return;
-          }
-          playNote(midi, 0, 1.0, 0.5);
-          if (q.needRoot) {
-            // "build both notes": the root has just been found, now the interval
-            q.needRoot = false;
-            d.piano.show([{ midi: q.rootMidi, name: T.noteName(q.rootNote), kind: 'root' }]);
-            const h = d.el.querySelector('.hands-hint');
-            if (h) h.innerHTML = `<span>now play <b>${q.iv.label.toLowerCase()}</b> ${q.dir < 0 ? 'below' : 'above'} it</span>`;
-            return;
-          }
-          d.locked = true;
-          d.record(q.iv.id, !q.missed);
-          d.piano.show([
-            { midi: q.rootMidi, name: T.noteName(q.rootNote), kind: 'root' },
-            { midi: q.targetMidi, name: T.noteName(q.target), kind: 'target', color: FAMILY_COLOR[q.iv.family] },
-          ], { from: q.rootMidi, to: q.targetMidi, label: `${q.iv.semis} st`, color: FAMILY_COLOR[q.iv.family] });
-          d.reveal(!q.missed);
-        },
+        onKey: (midi) => d.playKey(midi, true),
       });
       d.piano.setClickable(true);
       const hint = document.createElement('div');

@@ -201,10 +201,38 @@ export function renderInversionLab(el, rootName, ivId) {
 /* ─────────── 4. The scale gym ─────────── */
 
 export const GYM_SCALES = [
-  { id: 'wholetone', label: 'Whole-tone', note: 'every step a major 2nd', steps: [0, 2, 4, 6, 8, 10, 12] },
-  { id: 'chromatic', label: 'Chromatic', note: 'every step a minor 2nd', steps: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
-  { id: 'majblues', label: 'Major blues', note: '1 2 ♭3 3 5 6 — hexatonic', steps: [0, 2, 3, 4, 7, 9, 12] },
-  { id: 'minblues', label: 'Minor blues', note: '1 ♭3 4 ♭5 5 ♭7 — hexatonic', steps: [0, 3, 5, 6, 7, 10, 12] },
+  // — the ones the interval class actually runs —
+  { id: 'wholetone', group: 'Interval drills', label: 'Whole-tone', note: 'every step a major 2nd', steps: [0, 2, 4, 6, 8, 10, 12] },
+  { id: 'chromatic', group: 'Interval drills', label: 'Chromatic', note: 'every step a minor 2nd', steps: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+  { id: 'dim', group: 'Interval drills', label: 'Diminished', note: 'whole–half, all minor 3rds inside', steps: [0, 2, 3, 5, 6, 8, 9, 11, 12] },
+  { id: 'augmented', group: 'Interval drills', label: 'Augmented', note: 'm3 then M3, alternating', steps: [0, 3, 4, 7, 8, 11, 12] },
+
+  // — major and its modes —
+  { id: 'major', group: 'Major & modes', label: 'Major (Ionian)', note: '1 2 3 4 5 6 7', steps: [0, 2, 4, 5, 7, 9, 11, 12] },
+  { id: 'dorian', group: 'Major & modes', label: 'Dorian', note: 'minor with a major 6th', steps: [0, 2, 3, 5, 7, 9, 10, 12] },
+  { id: 'phrygian', group: 'Major & modes', label: 'Phrygian', note: 'minor with a ♭2 — the Spanish colour', steps: [0, 1, 3, 5, 7, 8, 10, 12] },
+  { id: 'lydian', group: 'Major & modes', label: 'Lydian', note: 'major with a ♯4 — dreamy, surreal', steps: [0, 2, 4, 6, 7, 9, 11, 12] },
+  { id: 'mixolydian', group: 'Major & modes', label: 'Mixolydian', note: 'major with a ♭7 — the dominant sound', steps: [0, 2, 4, 5, 7, 9, 10, 12] },
+  { id: 'aeolian', group: 'Major & modes', label: 'Aeolian (natural minor)', note: '1 2 ♭3 4 5 ♭6 ♭7', steps: [0, 2, 3, 5, 7, 8, 10, 12] },
+  { id: 'locrian', group: 'Major & modes', label: 'Locrian', note: '♭2 and a ♭5 — the diminished mode', steps: [0, 1, 3, 5, 6, 8, 10, 12] },
+
+  // — the other two minors —
+  { id: 'harmmin', group: 'Minor forms', label: 'Harmonic minor', note: 'natural minor with a raised 7th', steps: [0, 2, 3, 5, 7, 8, 11, 12] },
+  { id: 'melmin', group: 'Minor forms', label: 'Melodic minor (asc)', note: 'raised 6th and 7th going up', steps: [0, 2, 3, 5, 7, 9, 11, 12] },
+
+  // — five and six note scales —
+  { id: 'majpent', group: 'Pentatonic & blues', label: 'Major pentatonic', note: 'the major scale minus 4 and 7', steps: [0, 2, 4, 7, 9, 12] },
+  { id: 'minpent', group: 'Pentatonic & blues', label: 'Minor pentatonic', note: 'minor blues without the ♭5', steps: [0, 3, 5, 7, 10, 12] },
+  { id: 'majblues', group: 'Pentatonic & blues', label: 'Major blues', note: '1 2 ♭3 3 5 6 — hexatonic', steps: [0, 2, 3, 4, 7, 9, 12] },
+  { id: 'minblues', group: 'Pentatonic & blues', label: 'Minor blues', note: '1 ♭3 4 ♭5 5 ♭7 — hexatonic', steps: [0, 3, 5, 6, 7, 10, 12] },
+
+  // — Carnatic —
+  { id: 'mayamalava', group: 'Carnatic', label: 'Mayamalavagowla', note: 'the first scale every Carnatic student learns', steps: [0, 1, 4, 5, 7, 8, 11, 12] },
+  { id: 'kalyani', group: 'Carnatic', label: 'Kalyani', note: 'Lydian — prati Ma', steps: [0, 2, 4, 6, 7, 9, 11, 12] },
+  { id: 'kharaharapriya', group: 'Carnatic', label: 'Kharaharapriya', note: 'Dorian', steps: [0, 2, 3, 5, 7, 9, 10, 12] },
+  { id: 'harikambhoji', group: 'Carnatic', label: 'Harikambhoji', note: 'Mixolydian', steps: [0, 2, 4, 5, 7, 9, 10, 12] },
+  { id: 'todi', group: 'Carnatic', label: 'Shubhapantuvarali', note: 'the ♭2 ♭3 ♯4 ♭6 colour', steps: [0, 1, 3, 6, 7, 8, 11, 12] },
+  { id: 'charukesi', group: 'Carnatic', label: 'Charukesi', note: 'major above, minor below', steps: [0, 2, 4, 5, 7, 8, 10, 12] },
 ];
 
 /* Plain names, the way the class chants them: notation is biased towards the
@@ -222,7 +250,11 @@ export function renderScaleGym(el, rootName) {
   const useFlats = rootName.includes('b') || rootName === 'F';
 
   el.querySelector('.lab-body').innerHTML = `
-    <div class="gym-picker">${GYM_SCALES.map((s, i) => `<button class="gym-tab${i === 0 ? ' active' : ''}" data-gym="${s.id}">${s.label}</button>`).join('')}</div>
+    <div class="gym-groups">${[...new Set(GYM_SCALES.map((g) => g.group))].map((group) => `
+      <div class="gym-group">
+        <span class="gym-group-name">${group}</span>
+        <div class="gym-picker">${GYM_SCALES.filter((g) => g.group === group).map((sc) => `<button class="gym-tab${sc.id === 'wholetone' ? ' active' : ''}" data-gym="${sc.id}">${sc.label}</button>`).join('')}</div>
+      </div>`).join('')}</div>
     <div class="gym-stage"></div>`;
 
   const stage = el.querySelector('.gym-stage');
