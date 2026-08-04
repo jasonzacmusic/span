@@ -10,6 +10,7 @@ import { Circle } from './circle.js';
 import { renderThirdsLab, renderTritoneLab, renderInversionLab, renderScaleGym } from './labs.js';
 import { drawInterval } from './staff.js';
 import { playInterval, playNote, unlockAudio } from './audio.js';
+import { iconLabel } from './icons.js';
 
 const state = {
   root: 'G',          // never default to C — house rule
@@ -63,7 +64,7 @@ function renderPianoPanel() {
     const anchorMidi = iv.derive.anchor === 'root' ? rm
       : iv.derive.anchor === 'P5' ? rm + 7 : rm + 12;
     if (anchorMidi !== tm && anchorMidi !== rm) {
-      marks.push({ midi: anchorMidi, kind: 'ghost', color: '#f7b955', name: iv.derive.anchor === 'P5' ? '5' : '8' });
+      marks.push({ midi: anchorMidi, kind: 'ghost', color: 'var(--gold)', name: iv.derive.anchor === 'P5' ? '5' : '8' });
     }
   }
   piano.show(marks, { from: rm, to: tm, label: `${iv.semis} st`, color });
@@ -148,9 +149,9 @@ function renderCard() {
       <span class="song">▼ ${iv.songs.down}</span>
     </div>
     <div class="iv-play">
-      <button class="play-btn" data-play="up">▶ Up</button>
-      <button class="play-btn" data-play="down">▶ Down</button>
-      <button class="play-btn" data-play="harmonic">▶ Together</button>
+      <button class="play-btn" data-play="up">${iconLabel('play', 'Up')}</button>
+      <button class="play-btn" data-play="down">${iconLabel('play', 'Down')}</button>
+      <button class="play-btn" data-play="harmonic">${iconLabel('play', 'Together')}</button>
     </div>`;
   const flip = document.getElementById('flipBtn');
   if (flip) flip.addEventListener('click', () => selectInterval(partner.id, true));

@@ -1,3 +1,8 @@
 .DS_Store
 node_modules/
 .vercel
+
+# impeccable: keep the live config, never the session state (holds a token)
+.impeccable/live/server.json
+.impeccable/live/roots.json
+.impeccable/hook.cache.json

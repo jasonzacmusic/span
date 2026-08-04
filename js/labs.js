@@ -6,6 +6,7 @@ import * as T from './theory.js';
 import { FAMILY_COLOR, INTERVAL_BY_ID, THIRDS_SHAPES, TRITONE_PAIRS } from './data.js';
 import { keyboardSVG, shapeGlyph, isBlack } from './keys.js';
 import { playInterval, playNote, playSequence, unlockAudio } from './audio.js';
+import { icon, iconLabel } from './icons.js';
 
 const BLACK_PC = new Set([1, 3, 6, 8, 10]);
 const pcIsBlack = (n) => BLACK_PC.has(T.pitchClass(n));
@@ -108,8 +109,8 @@ export function renderTritoneLab(el, onPick) {
     { midi: T.midi(hi), kind: 'target', color, label: T.noteName(hi) },
   ], { size: 'sm', minWhite: 8, arc: { from: T.midi(lo), to: T.midi(hi), color } })}
       <div class="tt-flip">
-        <button class="ghost-btn" data-tt-play>hear it</button>
-        <button class="ghost-btn" data-tt-invert>flip it over</button>
+        <button class="ghost-btn" data-tt-play>${iconLabel('play', 'hear it')}</button>
+        <button class="ghost-btn" data-tt-invert>${iconLabel('mirror', 'flip it over')}</button>
       </div>`;
     readout.querySelector('[data-tt-play]').addEventListener('click', () => {
       unlockAudio();
@@ -172,7 +173,7 @@ export function renderInversionLab(el, rootName, ivId) {
         <span class="inv-sum">the numbers: ${iv.num} + ${partner.num} = 9</span>
       </div>
       <button class="inv-flip" title="lift the bottom note up an octave">
-        <span class="inv-arrow">⇅</span><span>flip the<br>bottom note<br>up an octave</span>
+        <span class="inv-arrow">${icon.invert({ size: '22px' })}</span><span>flip the<br>bottom note<br>up an octave</span>
       </button>
       <div class="inv-side">
         <span class="inv-tag" style="--fam:${c2}">${partner.short} · ${partner.label}</span>
@@ -236,7 +237,7 @@ export function renderScaleGym(el, rootName) {
       <div class="gym-kb">${keyboardSVG(marks, { size: 'md', minWhite: 8, range: [rootMidi - ((rootMidi - 60) % 12 + 12) % 12, rootMidi + 12 + 4] })}</div>
       <div class="gym-names">${midis.map((m, i) => `<span class="gym-note-name" data-i="${i}">${plainName(m, useFlats)}</span>`).join('<i class="gym-gap"></i>')}</div>
       <div class="gym-actions">
-        <button class="play-btn primary" data-gym-play>▶ Play it up and down</button>
+        <button class="play-btn primary" data-gym-play>${iconLabel('play', 'Play it up and down')}</button>
         <span class="gym-caption">${scale.note}</span>
       </div>`;
 

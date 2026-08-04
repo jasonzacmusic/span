@@ -7,6 +7,7 @@ import { Piano, placeInterval } from './piano.js';
 import { keyboardSVG } from './keys.js';
 import { drawInterval } from './staff.js';
 import { playInterval, playNote, unlockAudio } from './audio.js';
+import { icon, iconLabel } from './icons.js';
 
 const DRILL_IVS = INTERVALS.filter((iv) => !iv.bonus);
 const STORE_KEY = 'span-stats-v1';
@@ -58,7 +59,7 @@ class Drill {
         <div class="drill-streak">streak <b>0</b></div>
         <div class="drill-heat"></div>
         <label class="opt auto-opt"><input type="checkbox" data-auto checked> auto next</label>
-        <button class="drill-next">Next ↵</button>
+        <button class="drill-next">${iconLabel('enter', 'Next')}</button>
       </div>`;
     this.promptEl = this.el.querySelector('.drill-prompt');
     this.visualEl = this.el.querySelector('.drill-visual');
@@ -222,7 +223,7 @@ function earConfig() {
       d.promptEl.innerHTML = `<span>What do you hear?</span>`;
       const label = mode === 'harmonic' ? 'both together' : mode === 'down' ? 'downwards' : 'upwards';
       d.visualEl.innerHTML = `<div class="plate plate-ear">
-        <button class="big-play" title="replay (R)">▶</button>
+        <button class="big-play" title="replay (R)" aria-label="replay">${icon.play({ size: '21px' })}</button>
         <span class="ear-mode">${label}${spread ? ' · spread wide' : ''}</span>
         <span class="ear-hint">press <b>R</b> to replay · <b>1–9</b> to answer</span></div>`;
       const play = () => playInterval(rm + off, tm + off + spread, mode);

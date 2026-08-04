@@ -6,6 +6,7 @@ import { INTERVAL_BY_ID, FAMILY_COLOR, PRESETS } from './data.js';
 import { placeInterval } from './piano.js';
 import { keyboardSVG } from './keys.js';
 import { playNote, unlockAudio, audioContext } from './audio.js';
+import { icon } from './icons.js';
 
 const HOLD_MS = 900;
 const TOL_CENTS = 35;
@@ -88,7 +89,7 @@ function newQuestion() {
   q = { iv, rootNote, target, dir, rootMidi: rm, targetMidi: tm };
   const color = FAMILY_COLOR[iv.family];
   u.prompt.innerHTML = `
-    <button class="big-play" id="voiceRootBtn" title="hear the root again">▶</button>
+    <button class="big-play" id="voiceRootBtn" title="hear the root again" aria-label="hear the root again">${icon.play({ size: '21px' })}</button>
     <span>Root is <b>${T.noteName(rootNote)}</b> — sing <b class="q-iv" style="--fam:${color}">${iv.short}</b> ${dir < 0 ? '↓ down' : '↑ up'}
     <em class="v-target-hide">(${T.noteName(target)})</em></span>
     <button class="ghost-btn" id="voiceRevealBtn">show answer</button>

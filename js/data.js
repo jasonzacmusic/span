@@ -126,7 +126,7 @@ export const INTERVAL_BY_ID = Object.fromEntries(INTERVALS.map((iv) => [iv.id, i
 /* One pen per interval family — the colours he actually reaches for on the
    whiteboard, tuned to read on cream paper. */
 export const FAMILY_COLOR = {
-  seconds: '#9c6b18',   // ochre
+  seconds: '#8a5d14',   // ochre
   thirds: '#2f6b34',    // forest green
   perfect: '#1c3f7c',   // navy
   tritone: '#a8271b',   // vermilion
