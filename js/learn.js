@@ -1,15 +1,15 @@
-/* Span — the Codex: one view where the circle, the keyboard, the staff and
-   the trick card all light up together for the selected interval. */
+/* Span — the Learn view: the circle, the keyboard, the staff and the trick
+   card all light up together for whichever interval you pick. */
 
 import * as T from './theory.js';
 import {
-  INTERVALS, INTERVAL_BY_ID, FAMILY_COLOR, THIRDS_SHAPES, TRITONE_PAIRS,
-  CIRCLE_STEPS, KEY_SIGS, TRANSPOSING,
+  INTERVALS, INTERVAL_BY_ID, FAMILY_COLOR, CIRCLE_STEPS, KEY_SIGS, TRANSPOSING,
 } from './data.js';
 import { Piano, placeInterval } from './piano.js';
 import { Circle } from './circle.js';
+import { renderThirdsLab, renderTritoneLab, renderInversionLab, renderScaleGym } from './labs.js';
 import { drawInterval } from './staff.js';
-import { playInterval, playSequence, playNote, unlockAudio } from './audio.js';
+import { playInterval, playNote, unlockAudio } from './audio.js';
 
 const state = {
   root: 'G',          // never default to C — house rule
@@ -83,7 +83,7 @@ function renderStaff() {
   if (instr && instr.id !== 'C') {
     notes = notes.map((n) => T.transpose(n, { num: instr.num, quality: instr.quality }, 1));
   }
-  const el = document.getElementById('codexStaff');
+  const el = document.getElementById('learnStaff');
   const w = Math.max(260, Math.min(el.clientWidth || 300, 420));
   drawInterval(el, notes, {
     clef: state.clef, keySig: state.keySig, mode: state.staffMode, width: w,
@@ -165,6 +165,9 @@ function renderAll() {
   renderCircle();
   renderStaff();
   renderCard();
+  // the inversion bench follows both the root and the selected interval
+  const inv = document.getElementById('inversionLab');
+  if (inv && inv.querySelector('.lab-body')) renderInversionLab(inv, state.root, state.iv);
   document.getElementById('rootBadge').textContent = T.noteName(T.parseNote(state.root));
 }
 
@@ -189,69 +192,40 @@ function selectInterval(id, autoplay = false) {
 function setRoot(name, autoplay = false) {
   state.root = name;
   renderAll();
+  // the gym is built around the root, so it only rebuilds when the root moves
+  const gym = document.getElementById('scaleGym');
+  if (gym && gym.querySelector('.lab-body')) renderScaleGym(gym, state.root);
   if (autoplay) playCurrent('up');
 }
 
-function renderThirdsLab(which = 'M3') {
-  const lab = document.getElementById('thirdsLab');
-  const groups = THIRDS_SHAPES[which];
-  const color = which === 'M3' ? FAMILY_COLOR.thirds : '#7fb4ff';
-  lab.querySelector('.lab-body').innerHTML = groups.map((g) => `
-    <div class="shape-row">
-      <span class="shape-name">${g.shape} <em>${g.pairs.length}</em></span>
-      <div class="shape-chips">${g.pairs.map(([a, b]) => {
-        const an = T.noteName(T.parseNote(a));
-        const bn = T.noteName(T.parseNote(b));
-        return `<button class="note-chip" data-a="${a}" data-b="${b}" data-iv="${which}" style="--fam:${color}">${an}·${bn}</button>`;
-      }).join('')}</div>
-    </div>`).join('');
-  lab.querySelectorAll('.thirds-toggle button').forEach((b) => b.classList.toggle('active', b.dataset.which === which));
+/* The visual labs live in labs.js — they all redraw when the root or the
+   selected interval changes. */
+function renderLabs() {
+  renderThirdsLab(document.getElementById('thirdsLab'), thirdsWhich, (rootName, ivId) => {
+    unlockAudio();
+    state.iv = ivId;
+    setRoot(rootName);
+    playCurrent('harmonic');
+  });
+  renderInversionLab(document.getElementById('inversionLab'), state.root, state.iv);
+  renderScaleGym(document.getElementById('scaleGym'), state.root);
 }
 
-function renderTritoneLab() {
-  const lab = document.getElementById('tritoneLab');
-  lab.querySelector('.lab-body').innerHTML = `<div class="shape-chips tt-chips">${TRITONE_PAIRS.map(([a, b]) => {
-    const an = T.noteName(T.parseNote(a));
-    const bn = T.noteName(T.parseNote(b));
-    return `<button class="note-chip tt" data-a="${a}" data-b="${b}" data-iv="TT" style="--fam:${FAMILY_COLOR.tritone}">${an} ⇄ ${bn}</button>`;
-  }).join('')}</div>`;
-}
+let thirdsWhich = 'M3';
 
 function wireLabs() {
   document.querySelectorAll('.thirds-toggle button').forEach((b) => {
-    b.addEventListener('click', () => renderThirdsLab(b.dataset.which));
+    b.addEventListener('click', () => {
+      thirdsWhich = b.dataset.which;
+      renderLabs();
+    });
   });
-  renderThirdsLab('M3');
-  renderTritoneLab();
-
-  document.getElementById('labsRow').addEventListener('click', (e) => {
-    const chip = e.target.closest('.note-chip');
-    if (!chip) return;
-    unlockAudio();
-    state.root = chip.dataset.a;
-    state.iv = chip.dataset.iv;
-    renderAll();
-    playCurrent(chip.dataset.iv === 'TT' ? 'up' : 'harmonic');
-  });
-
-  document.getElementById('wholeToneBtn').addEventListener('click', () => {
-    unlockAudio();
-    const { rootNote } = currentNotes();
-    const [rm] = placeInterval(T.pitchClass(rootNote), 12, 1);
-    const up = [0, 2, 4, 6, 8, 10, 12].map((s) => rm + s);
-    playSequence([...up, ...up.slice(0, -1).reverse()], 0.24, 0.45);
-  });
-  document.getElementById('chromaticBtn').addEventListener('click', () => {
-    unlockAudio();
-    const { rootNote } = currentNotes();
-    const [rm] = placeInterval(T.pitchClass(rootNote), 12, 1);
-    const up = Array.from({ length: 13 }, (_, i) => rm + i);
-    playSequence([...up, ...up.slice(0, -1).reverse()], 0.13, 0.3);
-  });
+  renderTritoneLab(document.getElementById('tritoneLab'), null);
+  renderLabs();
 }
 
-export function initCodex() {
-  piano = new Piano(document.getElementById('codexPiano'), {
+export function initLearn() {
+  piano = new Piano(document.getElementById('learnPiano'), {
     onKey: (midi) => {
       unlockAudio();
       playNote(midi, 0, 0.8, 0.5);
@@ -270,18 +244,18 @@ export function initCodex() {
     selectInterval(chip.dataset.iv, true);
   });
 
-  const keySel = document.getElementById('codexKey');
+  const keySel = document.getElementById('learnKey');
   keySel.innerHTML = KEY_SIGS.map((k) => `<option${k === state.keySig ? ' selected' : ''}>${k}</option>`).join('');
   keySel.addEventListener('change', () => { state.keySig = keySel.value; renderStaff(); });
 
-  const clefSel = document.getElementById('codexClef');
+  const clefSel = document.getElementById('learnClef');
   clefSel.addEventListener('change', () => { state.clef = clefSel.value; renderStaff(); });
 
-  const instrSel = document.getElementById('codexInstr');
+  const instrSel = document.getElementById('learnInstr');
   instrSel.innerHTML = TRANSPOSING.map((t) => `<option value="${t.id}">${t.label}</option>`).join('');
   instrSel.addEventListener('change', () => { state.instr = instrSel.value; renderStaff(); });
 
-  const modeSel = document.getElementById('codexStaffMode');
+  const modeSel = document.getElementById('learnStaffMode');
   modeSel.addEventListener('change', () => { state.staffMode = modeSel.value; renderStaff(); });
 
   wireLabs();

@@ -27,15 +27,22 @@ Everything else falls out of those:
 
 ## The five views
 
-- **Codex** — one screen where the circle of fifths, the keyboard, the staff and
-  the trick card all light up together for whichever interval you pick. Includes
-  the thirds shape charts, the six tritone mirrors and a scale gym (whole-tone
-  for major 2nds, chromatic for minor 2nds).
+- **Learn** — one screen where the circle of fifths, the keyboard, the staff and
+  the trick card all light up together for whichever interval you pick. Below it
+  sit four visual labs, all drawn as keyboards rather than lists of note names:
+  thirds by key colour, the tritone clock, the inversion bench (lift the bottom
+  note an octave and watch it become its partner) and the scale gym (whole-tone,
+  chromatic and both blues scales, lighting up key by key as they play).
 - **Ear** — hear it, name it. Up, down or together; low, mid or high register.
 - **Eyes** — read it off the staff, in any key signature and either clef.
 - **Hands** — build it on the keyboard from a given root.
 - **Voice** — hear the root, sing the interval, hold it for a second. Live pitch
   detection, octave-agnostic so any voice type can practise.
+
+Ear adds registers (including roaming) and a "wide" spread; Hands can ask you to
+find the root as well as the interval; every drill answers with a picture of the
+two keys and the trick that gets you there next time. Each view is linkable by
+hash — `#ear`, `#eyes`, `#hands`, `#voice`.
 
 Each drill keeps a streak and a per-interval accuracy heat strip in
 localStorage, so you can see which distances you actually own.

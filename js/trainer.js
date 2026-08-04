@@ -4,6 +4,7 @@
 import * as T from './theory.js';
 import { INTERVALS, INTERVAL_BY_ID, FAMILY_COLOR, PRESETS, KEY_SIGS } from './data.js';
 import { Piano, placeInterval } from './piano.js';
+import { keyboardSVG } from './keys.js';
 import { drawInterval } from './staff.js';
 import { playInterval, playNote, unlockAudio } from './audio.js';
 
@@ -56,6 +57,7 @@ class Drill {
       <div class="drill-foot">
         <div class="drill-streak">streak <b>0</b></div>
         <div class="drill-heat"></div>
+        <label class="opt auto-opt"><input type="checkbox" data-auto checked> auto next</label>
         <button class="drill-next">Next ↵</button>
       </div>`;
     this.promptEl = this.el.querySelector('.drill-prompt');
@@ -127,16 +129,30 @@ class Drill {
     this.renderHeat();
   }
 
+  /* Always answer with a picture: the two keys, the distance drawn between
+     them, and the trick that gets you there next time. */
   reveal(ok) {
     this.markResult(ok);
     const { iv, rootNote, target, dir } = this.q;
     const color = FAMILY_COLOR[iv.family];
+    const [rm, tm] = placeInterval(T.pitchClass(rootNote), iv.semis, dir);
+    const kb = this.cfg.showRevealKeys === false ? '' : `<div class="fb-keys">${keyboardSVG([
+      { midi: rm, kind: 'root', label: T.noteName(rootNote) },
+      { midi: tm, kind: 'target', color, label: T.noteName(target) },
+    ], { size: 'sm', minWhite: 9, arc: { from: rm, to: tm, color } })}</div>`;
+
     this.feedbackEl.className = 'drill-feedback show ' + (ok ? 'ok' : 'no');
     this.feedbackEl.innerHTML = `
       <div class="fb-line"><b>${ok ? 'Yes!' : iv.short}</b> ${iv.label} — ${T.noteName(rootNote)} ${dir < 0 ? '↓' : '↑'} ${T.noteName(target)} · ${iv.semis} st</div>
+      ${kb}
       <div class="fb-trick" style="--fam:${color}">${iv.trick}</div>
       <div class="fb-song">▲ ${iv.songs.up} · ▼ ${iv.songs.down}</div>`;
-    if (ok) setTimeout(() => { if (this.locked) this.next(); }, 1600);
+    if (ok && this.autoAdvance()) setTimeout(() => { if (this.locked) this.next(); }, 2400);
+  }
+
+  autoAdvance() {
+    const box = this.el.querySelector('[data-auto]');
+    return !box || box.checked;
   }
 
   record(ivId, ok) {
@@ -180,10 +196,15 @@ function earConfig() {
       <label class="opt"><input type="checkbox" data-dir="up" checked> up</label>
       <label class="opt"><input type="checkbox" data-dir="down"> down</label>
       <label class="opt"><input type="checkbox" data-dir="harmonic"> together</label>
-      <select class="sel" data-reg><option value="0" selected>mid register</option><option value="-12">low register</option><option value="12">high register</option></select>`,
+      <select class="sel" data-reg><option value="0" selected>mid register</option><option value="-12">low register</option><option value="12">high register</option><option value="rand">roaming register</option></select>
+      <label class="opt" title="spread the two notes more than an octave apart"><input type="checkbox" data-wide> wide</label>`,
     wireOpts(d) {
       d.dirs = () => [...d.el.querySelectorAll('[data-dir]:checked')].map((c) => c.dataset.dir);
-      d.reg = () => parseInt(d.el.querySelector('[data-reg]').value, 10);
+      d.reg = () => {
+        const v = d.el.querySelector('[data-reg]').value;
+        return v === 'rand' ? randomOf([-12, -7, 0, 5, 12]) : parseInt(v, 10);
+      };
+      d.wide = () => d.el.querySelector('[data-wide]').checked;
       d.el.querySelectorAll('[data-dir]').forEach((c) => c.addEventListener('change', () => {
         if (d.dirs().length === 0) c.checked = true;
       }));
@@ -195,13 +216,16 @@ function earConfig() {
       const target = spelledTarget(rootNote, iv, dir);
       const [rm, tm] = placeInterval(T.pitchClass(rootNote), iv.semis, dir);
       const off = d.reg();
+      // "wide" throws the upper note an octave further out — same interval,
+      // much harder to place by ear
+      const spread = d.wide() ? 12 * dir : 0;
       d.promptEl.innerHTML = `<span>What do you hear?</span>`;
       const label = mode === 'harmonic' ? 'both together' : mode === 'down' ? 'downwards' : 'upwards';
       d.visualEl.innerHTML = `<div class="plate plate-ear">
         <button class="big-play" title="replay (R)">▶</button>
-        <span class="ear-mode">${label}</span>
+        <span class="ear-mode">${label}${spread ? ' · spread wide' : ''}</span>
         <span class="ear-hint">press <b>R</b> to replay · <b>1–9</b> to answer</span></div>`;
-      const play = () => playInterval(rm + off, tm + off, mode);
+      const play = () => playInterval(rm + off, tm + off + spread, mode);
       d.visualEl.querySelector('.big-play').addEventListener('click', () => { unlockAudio(); play(); });
       setTimeout(() => { unlockAudio(); play(); }, 250);
       d.q_play = play;
@@ -255,12 +279,15 @@ function handsConfig() {
     usesGrid: false,
     optsHTML: `
       <label class="opt"><input type="checkbox" data-hdir="1" checked> up</label>
-      <label class="opt"><input type="checkbox" data-hdir="-1"> down</label>`,
+      <label class="opt"><input type="checkbox" data-hdir="-1"> down</label>
+      <label class="opt" title="find the root yourself as well"><input type="checkbox" data-both> build both notes</label>`,
     wireOpts(d) {
       d.hdirs = () => [...d.el.querySelectorAll('[data-hdir]:checked')].map((c) => parseInt(c.dataset.hdir, 10));
+      d.both = () => d.el.querySelector('[data-both]').checked;
       d.el.querySelectorAll('[data-hdir]').forEach((c) => c.addEventListener('change', () => {
         if (d.hdirs().length === 0) c.checked = true;
       }));
+      d.el.querySelector('[data-both]').addEventListener('change', () => d.next());
     },
     setup(d) {
       const plate = document.createElement('div');
@@ -270,20 +297,30 @@ function handsConfig() {
         onKey: (midi) => {
           if (d.locked || !d.q) return;
           unlockAudio();
-          if (midi === d.q.targetMidi) {
-            d.locked = true;
-            playNote(midi, 0, 1.0, 0.5);
-            d.record(d.q.iv.id, true);
-            d.piano.show([
-              { midi: d.q.rootMidi, name: T.noteName(d.q.rootNote), kind: 'root' },
-              { midi: d.q.targetMidi, name: T.noteName(d.q.target), kind: 'target', color: FAMILY_COLOR[d.q.iv.family] },
-            ], { from: d.q.rootMidi, to: d.q.targetMidi, label: `${d.q.iv.semis} st`, color: FAMILY_COLOR[d.q.iv.family] });
-            d.reveal(true);
-          } else {
+          const q = d.q;
+          const wanted = q.needRoot ? q.rootMidi : q.targetMidi;
+          if (midi !== wanted) {
             playNote(midi, 0, 0.35, 0.35);
             d.piano.flashWrong(midi);
-            if (!d.q.missed) { d.q.missed = true; d.record(d.q.iv.id, false); d.markResult(false); }
+            if (!q.missed) { q.missed = true; d.record(q.iv.id, false); d.markResult(false); }
+            return;
           }
+          playNote(midi, 0, 1.0, 0.5);
+          if (q.needRoot) {
+            // "build both notes": the root has just been found, now the interval
+            q.needRoot = false;
+            d.piano.show([{ midi: q.rootMidi, name: T.noteName(q.rootNote), kind: 'root' }]);
+            const h = d.el.querySelector('.hands-hint');
+            if (h) h.innerHTML = `<span>now play <b>${q.iv.label.toLowerCase()}</b> ${q.dir < 0 ? 'below' : 'above'} it</span>`;
+            return;
+          }
+          d.locked = true;
+          d.record(q.iv.id, !q.missed);
+          d.piano.show([
+            { midi: q.rootMidi, name: T.noteName(q.rootNote), kind: 'root' },
+            { midi: q.targetMidi, name: T.noteName(q.target), kind: 'target', color: FAMILY_COLOR[q.iv.family] },
+          ], { from: q.rootMidi, to: q.targetMidi, label: `${q.iv.semis} st`, color: FAMILY_COLOR[q.iv.family] });
+          d.reveal(!q.missed);
         },
       });
       d.piano.setClickable(true);
@@ -301,12 +338,17 @@ function handsConfig() {
       const rootNote = T.parseNote(rootName);
       const target = spelledTarget(rootNote, iv, dir);
       const [rootMidi, targetMidi] = placeInterval(T.pitchClass(rootNote), iv.semis, dir);
+      const needRoot = d.both();
       d.promptEl.innerHTML = `<span>Build <b class="q-iv" style="--fam:${FAMILY_COLOR[iv.family]}">${iv.short}</b> ${dir < 0 ? '↓ down' : '↑ up'} from <b>${T.noteName(rootNote)}</b></span>`;
       const hint = d.el.querySelector('.hands-hint');
-      if (hint) hint.innerHTML = `<span>play the key that is <b>${iv.label.toLowerCase()}</b> ${dir < 0 ? 'below' : 'above'} the red one</span><button class="ghost-btn" data-hear-root>hear the root</button>`;
-      d.piano.show([{ midi: rootMidi, name: T.noteName(rootNote), kind: 'root' }]);
-      playNote(rootMidi, 0, 0.8, 0.5);
-      return { iv, rootNote, target, dir, rootMidi, targetMidi };
+      if (hint) {
+        hint.innerHTML = needRoot
+          ? `<span>first find <b>${T.noteName(rootNote)}</b> on the keyboard</span>`
+          : `<span>play the key that is <b>${iv.label.toLowerCase()}</b> ${dir < 0 ? 'below' : 'above'} the red one</span><button class="ghost-btn" data-hear-root>hear the root</button>`;
+      }
+      d.piano.show(needRoot ? [] : [{ midi: rootMidi, name: T.noteName(rootNote), kind: 'root' }]);
+      if (!needRoot) playNote(rootMidi, 0, 0.8, 0.5);
+      return { iv, rootNote, target, dir, rootMidi, targetMidi, needRoot };
     },
     replay(d) { if (d.q) playNote(d.q.rootMidi, 0, 0.8, 0.5); },
   };

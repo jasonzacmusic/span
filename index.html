@@ -57,7 +57,7 @@
   </div>
   <div class="root-pill">root <b id="rootBadge">G</b></div>
   <nav class="tabs">
-    <button class="tab" data-tab="codex">Codex</button>
+    <button class="tab" data-tab="learn">Learn</button>
     <button class="tab" data-tab="ear">Ear</button>
     <button class="tab" data-tab="eyes">Eyes</button>
     <button class="tab" data-tab="hands">Hands</button>
@@ -67,36 +67,36 @@
 
 <main>
 
-  <!-- ⸻ CODEX — the one view ⸻ -->
-  <section id="view-codex" class="view">
+  <!-- ⸻ LEARN — the one view ⸻ -->
+  <section id="view-learn" class="view">
     <div id="ivRail" class="iv-rail"></div>
 
-    <div class="codex-grid">
+    <div class="learn-grid">
       <div class="panel circle-wrap">
         <h3>Circle of Fifths</h3>
-        <p class="hint">click any note to set your root · ⟳ fifths · ⟲ fourths · straight across = tritone</p>
+        <p class="hint">click any note to set your root · &#10227; fifths · &#10226; fourths · straight across = tritone</p>
         <div id="circlePanel"></div>
       </div>
 
       <div class="panel center-wrap">
         <span class="plate-label">under the hands</span>
-        <div id="codexPiano" class="piano-wrap"></div>
+        <div id="learnPiano" class="piano-wrap"></div>
         <div class="staff-row">
           <div class="staff-col">
             <span class="plate-label">as written</span>
-            <div id="codexStaff" class="staff-box"></div>
+            <div id="learnStaff" class="staff-box"></div>
           </div>
           <div class="staff-controls">
-            <select id="codexStaffMode" class="sel">
+            <select id="learnStaffMode" class="sel">
               <option value="melodic" selected>melodic</option>
               <option value="harmonic">harmonic</option>
             </select>
-            <select id="codexClef" class="sel">
+            <select id="learnClef" class="sel">
               <option value="treble" selected>treble clef</option>
               <option value="bass">bass clef</option>
             </select>
-            <label class="sel-label">key <select id="codexKey" class="sel"></select></label>
-            <select id="codexInstr" class="sel"></select>
+            <label class="sel-label">key <select id="learnKey" class="sel"></select></label>
+            <select id="learnInstr" class="sel"></select>
           </div>
         </div>
       </div>
@@ -104,34 +104,46 @@
       <div id="ivCard" class="panel iv-card"></div>
     </div>
 
-    <div id="labsRow" class="labs-row">
-      <div id="thirdsLab" class="panel lab">
+    <div id="labsRow">
+      <section id="thirdsLab" class="panel lab sheet">
         <div class="lab-head">
-          <h3>Thirds by Shape</h3>
+          <div>
+            <h3>Thirds by key colour</h3>
+            <p class="hint">the one thing you mug up &mdash; so learn it as a shape your hand makes, not a name</p>
+          </div>
           <div class="thirds-toggle">
             <button data-which="M3" class="active">M3</button>
             <button data-which="m3">m3</button>
           </div>
         </div>
-        <p class="hint">the one thing you mug up — chant them by key-colour</p>
         <div class="lab-body"></div>
+      </section>
+
+      <div class="sheet-pair">
+        <section id="tritoneLab" class="panel lab sheet">
+          <div class="lab-head"><div>
+            <h3>The tritone clock</h3>
+            <p class="hint">six diameters &mdash; click a line or a note</p>
+          </div></div>
+          <div class="lab-body"></div>
+        </section>
+
+        <section id="inversionLab" class="panel lab sheet">
+          <div class="lab-head"><div>
+            <h3>Turn it upside-down</h3>
+            <p class="hint">lift the bottom note an octave and you have the other half of the pair</p>
+          </div></div>
+          <div class="lab-body"></div>
+        </section>
       </div>
 
-      <div id="tritoneLab" class="panel lab">
-        <div class="lab-head"><h3>Tritone Mirrors</h3></div>
-        <p class="hint">six pairs — the only interval that inverts into itself</p>
+      <section id="scaleGym" class="panel lab sheet">
+        <div class="lab-head"><div>
+          <h3>Scale gym</h3>
+          <p class="hint">run these from your root until the distances live in your fingers</p>
+        </div></div>
         <div class="lab-body"></div>
-      </div>
-
-      <div class="panel lab">
-        <div class="lab-head"><h3>Scale Gym</h3></div>
-        <p class="hint">internalise seconds by running these from your root</p>
-        <div class="lab-body scale-gym">
-          <button id="wholeToneBtn" class="play-btn wide">▶ Whole-tone scale <span class="dim-text">all major 2nds</span></button>
-          <button id="chromaticBtn" class="play-btn wide">▶ Chromatic scale <span class="dim-text">all minor 2nds</span></button>
-          <p class="gym-note">M2 = root + 2 · m2 = root + 1 — run them up and down until the distances live in your fingers.</p>
-        </div>
-      </div>
+      </section>
     </div>
   </section>
 
@@ -149,6 +161,7 @@
       <div id="voiceStatus" class="voice-status"></div>
       <div id="voiceStage" style="display:none">
         <div id="voicePrompt" class="drill-prompt"></div>
+        <div id="voiceKeys" class="voice-keys"></div>
         <div id="voiceMeter" class="voice-meter">
           <div class="meter-track">
             <div class="meter-center"></div>

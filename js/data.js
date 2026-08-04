@@ -1,4 +1,4 @@
-/* Span — the codex data. Tricks straight from the B108 class, plus the
+/* Span — the interval data. Tricks straight from the B108 class, plus the
    embellishments: song anchors, sargam, circle-steps, ghost anchors. */
 
 export const INTERVALS = [

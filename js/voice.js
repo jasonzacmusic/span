@@ -4,6 +4,7 @@
 import * as T from './theory.js';
 import { INTERVAL_BY_ID, FAMILY_COLOR, PRESETS } from './data.js';
 import { placeInterval } from './piano.js';
+import { keyboardSVG } from './keys.js';
 import { playNote, unlockAudio, audioContext } from './audio.js';
 
 const HOLD_MS = 900;
@@ -94,9 +95,22 @@ function newQuestion() {
     <button class="ghost-btn" id="voiceSkipBtn">skip</button>`;
   u.fb.innerHTML = '';
   u.fb.className = 'drill-feedback';
+  // the shape you are aiming for, drawn — the target key stays hidden until asked
+  const kbEl = document.getElementById('voiceKeys');
+  if (kbEl) {
+    kbEl.innerHTML = keyboardSVG([
+      { midi: q.rootMidi, kind: 'root', label: T.noteName(rootNote) },
+    ], { size: 'sm', minWhite: 10 });
+  }
   document.getElementById('voiceRootBtn').addEventListener('click', () => { unlockAudio(); playNote(q.rootMidi, 0, 1.0, 0.5); });
   document.getElementById('voiceRevealBtn').addEventListener('click', () => {
     document.querySelector('.v-target-hide')?.classList.add('shown');
+    if (kbEl) {
+      kbEl.innerHTML = keyboardSVG([
+        { midi: q.rootMidi, kind: 'root', label: T.noteName(rootNote) },
+        { midi: q.targetMidi, kind: 'target', color, label: T.noteName(target) },
+      ], { size: 'sm', minWhite: 10, arc: { from: q.rootMidi, to: q.targetMidi, color } });
+    }
     playNote(q.targetMidi, 0, 1.0, 0.5);
   });
   document.getElementById('voiceSkipBtn').addEventListener('click', newQuestion);
@@ -106,6 +120,14 @@ function newQuestion() {
 function success() {
   solved = true;
   const u = ui();
+  const color = FAMILY_COLOR[q.iv.family];
+  const kbEl = document.getElementById('voiceKeys');
+  if (kbEl) {
+    kbEl.innerHTML = keyboardSVG([
+      { midi: q.rootMidi, kind: 'root', label: T.noteName(q.rootNote) },
+      { midi: q.targetMidi, kind: 'target', color, label: T.noteName(q.target) },
+    ], { size: 'sm', minWhite: 10, arc: { from: q.rootMidi, to: q.targetMidi, color } });
+  }
   u.fb.className = 'drill-feedback show ok';
   u.fb.innerHTML = `<div class="fb-line"><b>Nailed it!</b> ${q.iv.label} — ${T.noteName(q.rootNote)} ${q.dir < 0 ? '↓' : '↑'} ${T.noteName(q.target)}</div>
     <div class="fb-trick" style="--fam:${FAMILY_COLOR[q.iv.family]}">${q.iv.trick}</div>`;
